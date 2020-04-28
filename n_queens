@@ -1,0 +1,124 @@
+#!/opt/perl/bin/perl
+
+#
+# Little program which finds a solution of the N-queens problem, using
+# a backtracking algorithm.
+#
+
+use 5.026;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+use Scalar::Util qw [looks_like_number];
+
+use experimental 'signatures';
+
+binmode STDOUT, ":encoding(UTF-8)";
+
+sub place;
+
+my $board_size = shift // 8;
+
+die "Usage $0 <board_size>" unless looks_like_number $board_size &&
+                                                     $board_size > 0;
+
+my $board   = {};
+my @indices = (0 .. $board_size - 1);
+
+#
+# Return true if the queen on row $row doesn't now attach any
+# queen on a previous row, false otherwise.
+#
+sub valid ($row, $board) {
+    foreach my $prev (0 .. $row - 1) {
+        return if $$board {$row} == $$board {$prev}  ||  # Same column
+             abs ($$board {$row} -  $$board {$prev}) ==
+             abs (         $row  -           $prev);     # Same diagonal
+    }
+    return 1;
+}
+
+
+#
+# Given a partially filled board, and a row, try the place a queen in
+# the given row; if there is already a queen on that row, try the next
+# location. Return false if we cannot place a queen on the row.
+#
+sub next_try_in_row ($row, $board) {
+    my $col = delete $$board {$row} // -1;
+    foreach my $try ($col + 1 .. $board_size - 1) {
+        $$board {$row} = $try;
+        return 1 if valid $row, $board;
+    }
+    delete $$board {$row};
+    return;
+}
+
+#
+# Place queens, starting at postion $row. As long as we can find
+# positions, try them, and continue with the next row. If not, 
+# backtrack. Returns true on success.
+#
+sub place ($row, $board) {
+    return 1 if $row >= $board_size;
+    while (next_try_in_row $row, $board) {
+        return 1 if place $row + 1, $board;
+    }
+    return;
+}
+
+
+#
+# Print out the resulting board.
+#
+sub print_board ($board) {
+    foreach my $row (@indices) {
+        foreach my $col (@indices) {
+            print $$board {$row} == $col ? "\x{2655}"  # White Queen
+                : ($row + $col) % 2      ? "."
+                :                          " ";
+        }
+        print "\n";
+    }
+}
+
+
+#
+# Place queens on the board, starting from row 0.
+#
+if (place 0, $board) {
+    print_board $board;
+}
+else {
+    say "No solution";
+}
+
+
+__END__
+
+Timings for certain sizes, in seconds:
+
+ 4 ->  0.010
+ 5 ->  0.012
+ 6 ->  0.012
+ 7 ->  0.012
+ 8 ->  0.012
+ 9 ->  0.012
+10 ->  0.016
+11 ->  0.014
+12 ->  0.020
+13 ->  0.014
+14 ->  0.060
+15 ->  0.050
+16 ->  0.314
+17 ->  0.184
+18 ->  1.546
+19 ->  0.110
+20 ->  8.770
+21 ->  0.402
+22 -> 89.886
+23 ->  1.418
+24 -> 24.064
+25 ->  3.132
+
