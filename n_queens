@@ -27,7 +27,7 @@ my $board   = {};
 my @indices = (0 .. $board_size - 1);
 
 #
-# Return true if the queen on row $row doesn't now attach any
+# Return true if the queen on row $row doesn't attack any
 # queen on a previous row, false otherwise.
 #
 sub valid ($row, $board) {
