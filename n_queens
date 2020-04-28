@@ -56,7 +56,7 @@ sub next_try_in_row ($row, $board) {
 }
 
 #
-# Place queens, starting at postion $row. As long as we can find
+# Place queens, starting at row $row. As long as we can find
 # positions, try them, and continue with the next row. If not, 
 # backtrack. Returns true on success.
 #
