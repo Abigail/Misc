@@ -87,6 +87,37 @@ sub set_up {
             symbol => "\N{WHITE CHESS KNIGHT}",
             name   => "Knight",
         },
+        F => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                # Distance 1 away on a diagonal, which translates to 
+                # being 1 away in both the row and column.
+                abs ($row1 - $row2) == 1 && abs ($col1 - $col2) == 1
+            },
+            symbol => "F",
+            name   => "Ferz",
+        },
+        W => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                # Distance 1 away orthogonally, which translate to 
+                # either 1 away in the row, but in the same column,
+                # or 1 away in a column, but on the same row.
+                abs ($row1 - $row2) == 1 && abs ($col1 - $col2) == 0 ||
+                abs ($row1 - $row2) == 0 && abs ($col1 - $col2) == 1
+            },
+            symbol => "W",
+            name   => "Wazir",
+        },
+        D => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                # Distance 2 away orthogonally, which translate to 
+                # either 2 away in the row, but in the same column,
+                # or 2 away in a column, but on the same row.
+                abs ($row1 - $row2) == 2 && abs ($col1 - $col2) == 0 ||
+                abs ($row1 - $row2) == 0 && abs ($col1 - $col2) == 2
+            },
+            symbol => "D",
+            name   => "Dabbaba",
+        },
     );
 
     my sub usage ($help = 0) {
