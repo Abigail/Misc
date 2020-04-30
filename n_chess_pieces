@@ -1,0 +1,254 @@
+#!/opt/perl/bin/perl
+
+use 5.026;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+
+binmode STDOUT, ":encoding(UTF-8)";
+
+#
+# Attempt to place N chess pieces on chess board, so that they
+# do not attack, using a back tracking algorithm. 
+#
+# Warning: this is not the fastest method by far, there are
+# straight forward algorithms to populate a chess board this way.
+# In particular, this program does not do any optimizations; for
+# instance, it won't try just one rook/queen per row or column.
+#
+
+use Getopt::Long;
+
+sub usage;
+
+my ($ROWS, $COLS, $NR_OF_PIECES, $SYMBOL, $DOES_ATTACK, @BOARD);
+
+#
+# Parse the arguments, and set up the details given those arguments.
+# Whatever is being setup in this method should not be modified afterwards.
+#
+sub set_up {
+    #
+    # This is the only place which contains any information on how
+    # pieces move; the rest of the program is agnostic about piece
+    # movement.
+    #
+    # This is hash is indexed by piece name (capital letter, followed
+    # by zero or more lowercase letters), and the values are hash
+    # refs with three fields:
+    #    - attack:  A subroutine which takes 2 sets of 2 coordinates,
+    #               and returns true of a piece placed on one set of the
+    #               coordinates attacks a piece placed on the other set.
+    #    - symbol:  A single character string used to when printing out
+    #               the solution. This may be a Unicode string.
+    #    - name:    The name of the piece; to be used in the usage() message.
+    #
+    my %piece_info = (
+        Q => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                $row1 == $row2  ||                           # Same row
+                $col1 == $col2  ||                           # Same column
+                abs ($row1 - $row2) == abs ($col1 - $col2)   # Same diagonal
+            },
+            symbol => "\N{WHITE CHESS QUEEN}",
+            name   => "Queen",
+        },
+        R => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                $row1 == $row2  ||                           # Same row
+                $col1 == $col2                               # Same column
+            },
+            symbol => "\N{WHITE CHESS ROOK}",
+            name   => "Rook",
+        },
+        B => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                abs ($row1 - $row2) == abs ($col1 - $col2)   # Same diagonal
+            },
+            symbol => "\N{WHITE CHESS BISHOP}",
+            name   => "Bishop",
+        },
+        K => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                abs ($row1 - $row2) <= 1 &&
+                abs ($col1 - $col2) <= 1
+            },
+            symbol => "\N{WHITE CHESS KING}",
+            name   => "King",
+        },
+        N => {
+            attack => sub ($row1, $col1, $row2, $col2) {
+                abs ($row1 - $row2) == 1 && abs ($col1 - $col2) == 2 ||
+                abs ($row1 - $row2) == 2 && abs ($col1 - $col2) == 1
+            },
+            symbol => "\N{WHITE CHESS KNIGHT}",
+            name   => "Knight",
+        },
+    );
+
+    my sub usage ($help = 0) {
+        say "Usage: $0 [--size N[xM]] [--pieces P] [--nr R] [--help]";
+        if ($help) {
+            my $name_list;
+            foreach my $short_name (sort keys %piece_info) {
+                my $long_name = $piece_info {$short_name} {name};
+                $name_list .= (" " x 24) if $name_list;
+                $name_list .= sprintf "%s:  %s\n" => $short_name, $long_name;
+            }
+            chomp $name_list;
+            print << "            --" =~ s/^\s{12}//gmr;
+                --size 'N'
+                --size 'NxM'
+                    The size of the board; this defaults to an 8x8 board.
+                    If only one size is given, a square board of this size
+                    is used. N and M should be positive integers.
+                --piece P
+                    Use the chess piece P. Currently recognized pieces are:
+                        $name_list
+                --nr R
+                --n R
+                --pieces R
+                    Attempt to place R chess pieces on the board. R defaults
+                    to the smallest side of the board (8, unless overridden
+                    by the --size parameter).
+                --shuffle
+                    By default, pieces are placed row by row, and in a row,
+                    column by column, starting from positon (0, 0). If this
+                    argument is given, we shuffle the positions first.
+                    This may speed up some cases, and be significant slower
+                    in others.
+                --help
+                --usage
+                --?
+                    Displays this usage message
+            --
+        }
+        exit;
+    }
+
+    GetOptions 'size=s'         =>  \(my $size  = '8x8'),
+               'piece=s'        =>  \(my $piece = 'Q'),
+               'nr|n|pieces=i'  =>  \(my $nr_of_pieces),
+               'help|usage|?'   =>  \(my $help),
+               'shuffle'        =>  \(my $shuffle),
+        or usage;
+
+
+    usage 1 if $help;
+
+
+    #
+    # Parsing and validation of arguments.
+    #
+    $size =~ /^                (?<rows>[1-9][0-9]*)
+               (?:\s* [xX] \s* (?<cols>[1-9][0-9]*))? \s*$/x
+               or usage;
+    $ROWS = $+ {rows};
+    $COLS = $+ {cols} || $ROWS;
+
+    $piece = ucfirst lc $piece;
+    $piece_info {$piece} or usage;
+
+    $DOES_ATTACK = $piece_info {$piece} {attack};
+    $SYMBOL      = $piece_info {$piece} {symbol};
+
+    usage if $nr_of_pieces && $nr_of_pieces < 1;
+    $NR_OF_PIECES = $nr_of_pieces || ($ROWS <= $COLS ? $ROWS : $COLS);
+
+
+    #
+    # Create a list of board positions
+    #
+    foreach my $row (0 .. $ROWS - 1) {
+        foreach my $col (0 .. $COLS - 1) {
+            push @BOARD => [$row, $col];
+        }
+    }
+
+    if ($shuffle) {
+        use List::Util 'shuffle';
+        @BOARD = shuffle @BOARD;
+    }
+}
+
+
+set_up;   # Initialize parameters.
+
+
+#
+# Create a list of positions where the pieces are, indexed into @board.
+# 
+my @positions = (-1) x $NR_OF_PIECES;
+
+
+sub attack_free ($index) {
+    #
+    # Check whether the currently placed pieces does not attack
+    # any of the other pieces.
+    #
+    my $current_position = $positions [$index];
+    my ($cur_row, $cur_col) = @{$BOARD [$current_position]};
+
+    foreach my $other_index (0 .. $index - 1) {
+        my $other_position = $positions [$other_index];
+        my ($other_row, $other_col) = @{$BOARD [$other_position]};
+        return if $DOES_ATTACK -> ($cur_row, $cur_col, $other_row, $other_col);
+    }
+
+    return 1;
+}
+
+#
+# Attempt to place a piece on the board. We start off from the next
+# square the "previous" piece has been placed. If we can place a piece,
+# we return 1 if this was the last piece, else, we try the next piece.
+# If we run out of options, we set the position back to -1, and return false.
+#
+sub place;
+sub place ($index = 0) {
+    my $start = $index == 0 ? 0 : $positions [$index - 1] + 1;
+    foreach my $try ($start .. @BOARD - 1) {
+        $positions [$index] = $try;
+        if (attack_free ($index)) {
+            return 1 if $index == $NR_OF_PIECES - 1 || place $index + 1;
+        }
+    }
+    $positions [$index] = -1;
+    return;
+}
+
+#
+# Pretty print a solution
+#
+sub print_solution {
+    #
+    # First, take positions, and turn it into a hash, to see which
+    # fields have a piece.
+    #
+    my %occupied;
+    foreach my $position (@positions) {
+        my ($row, $col) = @{$BOARD [$position]};
+        $occupied {$row} {$col} = 1;
+    }
+    foreach my $row (0 .. $ROWS - 1) {
+        foreach my $col (0 .. $COLS - 1) {
+            print $occupied {$row} {$col} ? $SYMBOL
+                : ($row + $col) % 2       ? "."
+                :                           " ";
+        }
+        print "\n";
+    }
+}
+
+
+#
+# Run the algorithm; print the solution if there is one, else a
+# message there is no solution.
+#
+place ? print_solution : say "No solution found";
+
+
+__END__
