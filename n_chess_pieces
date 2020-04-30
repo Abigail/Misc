@@ -161,6 +161,10 @@ sub set_up {
                     Attempt to place R chess pieces on the board. R defaults
                     to the smallest side of the board (8, unless overridden
                     by the --size parameter).
+                --symbol S
+                    Use the symbol S to denote the piece when printing out
+                    the solution. The symbol will be truncated to 2 characters
+                    if it's larger.
                 --shuffle
                     By default, pieces are placed row by row, and in a row,
                     column by column, starting from positon (0, 0). If this
@@ -179,8 +183,9 @@ sub set_up {
     GetOptions 'size=s'         =>  \(my $size  = '8x8'),
                'piece=s'        =>  \(my $piece = 'Q'),
                'nr|n|pieces=i'  =>  \(my $nr_of_pieces),
-               'help|usage|?'   =>  \(my $help),
+               'symbol=s'       =>  \(my $symbol),
                'shuffle'        =>  \(my $shuffle),
+               'help|usage|?'   =>  \(my $help),
         or usage;
 
 
@@ -200,7 +205,8 @@ sub set_up {
     $piece_info {$piece} or usage;
 
     $DOES_ATTACK = $piece_info {$piece} {attack};
-    $SYMBOL      = sprintf "%-2.2s" => $piece_info {$piece} {symbol};
+
+    $SYMBOL      = sprintf "%-2.2s" => $symbol // $piece_info {$piece} {symbol};
 
     usage if $nr_of_pieces && $nr_of_pieces < 1;
     $NR_OF_PIECES = $nr_of_pieces || ($ROWS <= $COLS ? $ROWS : $COLS);
