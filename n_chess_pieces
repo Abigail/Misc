@@ -25,6 +25,8 @@ use Getopt::Long;
 sub usage;
 
 my ($ROWS, $COLS, $NR_OF_PIECES, $SYMBOL, $DOES_ATTACK, @BOARD);
+my $WHITE_FIELD = "  ";
+my $BLACK_FIELD = "..";
 
 #
 # Parse the arguments, and set up the details given those arguments.
@@ -198,7 +200,7 @@ sub set_up {
     $piece_info {$piece} or usage;
 
     $DOES_ATTACK = $piece_info {$piece} {attack};
-    $SYMBOL      = $piece_info {$piece} {symbol};
+    $SYMBOL      = sprintf "%-2.2s" => $piece_info {$piece} {symbol};
 
     usage if $nr_of_pieces && $nr_of_pieces < 1;
     $NR_OF_PIECES = $nr_of_pieces || ($ROWS <= $COLS ? $ROWS : $COLS);
@@ -278,14 +280,18 @@ sub print_solution {
         my ($row, $col) = @{$BOARD [$position]};
         $occupied {$row} {$col} = 1;
     }
+    my $line = "+" . ("--+" x $COLS);
     foreach my $row (0 .. $ROWS - 1) {
+        say $line;
         foreach my $col (0 .. $COLS - 1) {
+            print "|";
             print $occupied {$row} {$col} ? $SYMBOL
-                : ($row + $col) % 2       ? "."
-                :                           " ";
+                : ($row + $col) % 2       ? $BLACK_FIELD
+                :                           $WHITE_FIELD;
         }
-        print "\n";
+        print "|\n";
     }
+    say $line;
 }
 
 
