@@ -118,6 +118,20 @@ sub set_up {
             symbol => "D",
             name   => "Dabbaba",
         },
+        A => {
+            #
+            # Combines the Queen and the Knight
+            #
+            attack => sub ($row1, $col1, $row2, $col2) {
+                $row1 == $row2                             ||  # Same row
+                $col1 == $col2                             ||  # Same column
+                abs ($row1 - $row2) == abs ($col1 - $col2) ||  # Same diagonal
+                abs ($row1 - $row2) == 1 && abs ($col1 - $col2) == 2 || # Knight
+                abs ($row1 - $row2) == 2 && abs ($col1 - $col2) == 1    # move
+            },
+            symbol => "A",
+            name   => "Amazon",
+        },
     );
 
     my sub usage ($help = 0) {
