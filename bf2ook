@@ -1,0 +1,34 @@
+#!/opt/perl/bin/perl
+
+use 5.032;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+use experimental 'lexical_subs';
+
+my @out;
+
+while (<>) {
+    chomp;
+    s/[^<>+\-.,\[\]]+//g;
+    s/\./Ook! Ook. /g;
+    s/\,/Ook. Ook! /g;
+    s/\[/Ook! Ook? /g;
+    s/\]/Ook? Ook! /g;
+    s/\>/Ook. Ook? /g;
+    s/\</Ook? Ook. /g;
+    s/\+/Ook. Ook. /g;
+    s/\-/Ook! Ook! /g;
+    push @out => split ' ' => $_;
+}
+while (@out >= 14) {
+    my @chunks = splice @out, 0, 14;
+    say "@chunks";
+}
+say "@out" if @out;
+
+
+__END__
