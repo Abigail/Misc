@@ -42,7 +42,7 @@ my %commands = (
     '8_CLOSE'    =>   '}',
 );
 
-my @commands  =  sort keys %commands;
+my @command_keys =  sort keys %commands;
 
 
 #
@@ -63,16 +63,16 @@ my @ook       =  ("Ook. Ook? ", "Ook? Ook. ",
 # Map the tokens of the language we're using to the internal commands.
 #
 my %token2command;
-{
-    my %tokens = (
-        brainfuck   =>  \@brainfuck,
-        ook         =>  \@ook,
-    );
+my %tokens = (
+    brainfuck   =>  \@brainfuck,
+    ook         =>  \@ook,
+);
 
+{
     my $tokens = $tokens {$language} or die "Cannot figure the language";
 
-    foreach my $index (keys @commands) {
-        $token2command {$$tokens [$index]} = $commands [$index];
+    foreach my $index (keys @command_keys) {
+        $token2command {$$tokens [$index]} = $command_keys [$index];
     }
 };
 
@@ -80,19 +80,19 @@ my %token2command;
 #
 # Translate the source code into internal commands
 #
-my $intermediate = do {
+my @commands     = do {
     my $pattern  = join '|' => map {quotemeta} keys %token2command;
        $pattern .= "|(?s:.)";  # Skip unknown tokens
 
-    $source =~ s {($pattern)} {$token2command{$1} || ""}ger;
+    grep {$_} map  {$token2command {$_}} $source =~ /$pattern/g;
 };
 
 
 #
 # Then translate the intermediate into a Perl program
 #
-my  $program = 'my @cells; my $index = 0;' . $intermediate;
-    $program =~ s/($_)/$commands{$1}/g for keys %commands;
+my  $program = 'my @cells; my $index = 0;' .
+                join " " => map {$commands {$_}} @commands;
 
 
 #
