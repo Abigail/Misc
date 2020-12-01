@@ -1,0 +1,60 @@
+#!/opt/perl/bin/perl
+
+use 5.032;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+use experimental 'lexical_subs';
+
+use Getopt::Long;
+
+my %ext2language = (
+    bas     =>   "basic",
+    bf93    =>   "befunge",
+);
+
+GetOptions 'lang|language=s' => \my $language,
+;
+
+my $program = shift // die "Usage $0: <program>";
+
+if (!$language) {
+    #
+    # Try to guess language from extention
+    #
+    my ($ext) = $program =~ /\.([a-z0-9]+)$/;
+    if ($ext) {
+        $language = $ext2language {$ext};
+    }
+}
+if (!$language) {
+    #
+    # Guess from executable name
+    #
+    $language = $0 =~ s!.*/!!r;
+}
+$language =~ s/[^0-9A-Za-z]+//g;
+$language = lc $language;
+
+if ($language eq 'befunge') {
+    use Befunge::Interpreter;
+    my $interpreter = Befunge::Interpreter:: -> new;
+       $interpreter -> get_befunge ($program);
+       $interpreter -> process_befunge;
+}
+elsif ($language eq 'basic') {
+    use Language::Basic;
+    my $interpreter = Language::Basic::Program:: -> new;
+       $interpreter -> input ($program);
+       $interpreter -> parse;
+       $interpreter -> implement;
+}
+else {
+    die "Language $language not implemented";
+}
+
+
+__END__
