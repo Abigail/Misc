@@ -1,0 +1,98 @@
+#!/opt/perl/bin/perl
+
+use 5.032;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+use experimental 'lexical_subs';
+
+my @cells;
+my $index;
+
+#
+# Read in the source file; translate newlines to spaces.
+#
+my $source = do {local $/; <>};
+   $source =~ s/\n/ /g;
+
+
+#
+# Perl code to execute for each (internal) token.
+#
+my %commands = (
+    '1_RIGHT'    =>   '$index ++;',
+    '2_LEFT'     =>   '$index --;',
+    '3_INC'      =>   '$cells [$index] ++;',
+    '4_DEC'      =>   '$cells [$index] --;',
+    '5_OUTPUT'   =>   'print chr $cells [$index];',
+    '6_INPUT'    =>   '$cells [$index] = ord getc;',
+    '7_OPEN'     =>   'while ($cells [$index]) {',
+    '8_CLOSE'    =>   '}',
+);
+
+my @commands  =  sort keys %commands;
+
+
+#
+# Tokens of the various supported languages
+#
+my @brainfuck =  (  '>',        '<',
+                    '+',        '-',
+                    '.',        ',',
+                    '[',        ']');
+
+my @ook       =  ("Ook. Ook? ", "Ook? Ook. ",
+                  "Ook. Ook. ", "Ook! Ook! ",
+                  "Ook! Ook. ", "Ook. Ook! ",
+                  "Ook! Ook? ", "Ook? Ook! ");
+
+
+#
+# Map the tokens of the language we're using to the internal commands.
+#
+my %token2command;
+{
+    my %tokens = (
+        brainfuck   =>  \@brainfuck,
+        ook         =>  \@ook,
+    );
+
+    my $exe_name = $0 =~ s!.*/!!r;
+
+    my $tokens = $tokens {$exe_name} or die "Cannot figure the language";
+
+    foreach my $index (keys @commands) {
+        $token2command {$$tokens [$index]} = $commands [$index];
+    }
+};
+
+
+#
+# Translate the source code into internal commands
+#
+my $intermediate = do {
+    my $pattern  = join '|' => map {quotemeta} keys %token2command;
+       $pattern .= "|(?s:.)";  # Skip unknown tokens
+
+    $source =~ s {($pattern)} {$token2command{$1} || ""}ger;
+};
+
+
+#
+# Then translate the intermediate into a Perl program
+#
+my  $program = 'my @cells; my $index = 0;' . $intermediate;
+    $program =~ s/($_)/$commands{$1}/g for keys %commands;
+
+
+#
+# Now execute the resulting program
+#
+eval $program;
+
+
+
+__END__

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-(
-    echo "use Acme::Brainfuck;"
-    echo
-    cat $1
-) | perl
