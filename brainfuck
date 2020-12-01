@@ -9,6 +9,15 @@ no  warnings 'syntax';
 use experimental 'signatures';
 use experimental 'lexical_subs';
 
+use Getopt::Long;
+
+GetOptions 'lang|language=s'  =>  \my $language,
+           'target=s'         =>  \my $target,
+;
+$language = $0 =~ s!.*/!!r unless $language;
+$language =~ s/[^0-9A-Za-z]+//g;
+$language = lc $language;
+
 my @cells;
 my $index;
 
@@ -60,9 +69,7 @@ my %token2command;
         ook         =>  \@ook,
     );
 
-    my $exe_name = $0 =~ s!.*/!!r;
-
-    my $tokens = $tokens {$exe_name} or die "Cannot figure the language";
+    my $tokens = $tokens {$language} or die "Cannot figure the language";
 
     foreach my $index (keys @commands) {
         $token2command {$$tokens [$index]} = $commands [$index];
