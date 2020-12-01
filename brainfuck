@@ -88,17 +88,30 @@ my @commands     = do {
 };
 
 
-#
-# Then translate the intermediate into a Perl program
-#
-my  $program = 'my @cells; my $index = 0;' .
-                join " " => map {$commands {$_}} @commands;
+if ($target) {
+    my $tokens = $tokens {$target} or die "Cannot figure the target language";
+
+    my %command2token;
+    @command2token {@command_keys} = @$tokens;
+
+    #
+    # Translate the list of commands to the target tokens, and print them.
+    #
+    say join "" => map {$command2token {$_}} @commands;
+}
+else {
+    #
+    # Translate the intermediate into a Perl program
+    #
+    my  $program = 'my @cells; my $index = 0;' .
+                    join " " => map {$commands {$_}} @commands;
 
 
-#
-# Now execute the resulting program
-#
-eval $program;
+    #
+    # Now execute the resulting program
+    #
+    eval $program;
+}
 
 
 
