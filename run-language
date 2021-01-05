@@ -14,6 +14,7 @@ use Getopt::Long;
 my %ext2language = (
     bas     =>   "basic",
     bf93    =>   "befunge",
+    mps     =>   "mumps",
 );
 
 GetOptions 'lang|language=s' => \my $language,
@@ -104,6 +105,13 @@ elsif ($language eq 'basic') {
        $interpreter -> input ($program);
        $interpreter -> parse;
        $interpreter -> implement;
+}
+elsif ($language eq 'mumps') {
+    use lib '.';
+    use Language::Mumps;
+    my $text = `cat $program`;
+    my $code = Language::Mumps::compile ($text);
+    say $code;
 }
 else {
     die "Language $language not implemented";
