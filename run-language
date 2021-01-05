@@ -41,6 +41,59 @@ $language = lc $language;
 
 if ($language eq 'befunge') {
     use Befunge::Interpreter;
+    no warnings 'redefine';
+    no strict   'refs';
+    my @buffer;
+    my sub put_char ($char) {
+        push @buffer => $char;
+    }
+    my sub get_char {
+        return ord pop @buffer if @buffer;
+        eof (STDIN) ? -1 : ord getc STDIN;
+    }
+    *{"Befunge::Interpreter::input_int"} = sub {
+        # Skip any whitespace
+        my $c;
+        my $int = 0;
+        while (1) {
+            $c = get_char;
+            if ($c < 0) {  # EOF
+                Befunge::Interpreter::spush ($c);
+                return;
+            }
+            last if $c =~ /\S/;
+        }
+        while ($c =~ /^[0-9]$/) {
+            $int = 10 * $int + $c;
+            $c = get_char;
+        }
+        # Now $c is a not number.
+        # If we are at EOF, $c < 0. Return it if we haven't
+        # read a number yet, else, push it back.
+        #
+        if ($c < 0) {   # EOF
+            if ($int) {
+                put_char ($c);
+                Befunge::Interpreter::spush ($int);
+                return;
+            }
+            Befunge::Interpreter::spush ($c);
+            return;
+        }
+        Befunge::Interpreter::spush ($int);
+
+        # Skip any whitespace.
+        while (chr ($c) =~ /^\s$/) {
+            $c = get_char;
+        }
+
+        # $c is not first non-whitespace. so push it back.
+        put_char ($c);
+    };
+
+    *{"Befunge::Interpreter::input_ASCII"} = sub {
+        Befunge::Interpreter::spush (get_char);
+    };
     my $interpreter = Befunge::Interpreter:: -> new;
        $interpreter -> get_befunge ($program);
        $interpreter -> process_befunge;
