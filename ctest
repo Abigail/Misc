@@ -11,14 +11,87 @@ use strict;
 use warnings;
 no  warnings 'syntax';
 
-chdir ".." if -f "../test.pl";
-
 use experimental 'signatures';
+use experimental 'lexical_subs';
 
 use Test::More;
 use DBI;
-
 use Getopt::Long;
+use Config::Any;
+
+#
+# First, figure out what kind of challenge we are dealing with.
+#
+my $PERL_WEEKLY_CHALLENGE = 1;
+my $ADVENT_OF_CODE        = 2;
+my $GOLF                  = 3;
+my $pwd = `pwd`;
+my $dir;
+my $type;
+if ($pwd =~ m {/GitHub/}p) {
+    $dir = ${^POSTMATCH};
+    if ($dir =~ m {Programming_Challenges/perlweeklychallenge-club}) {
+        $type = $PERL_WEEKLY_CHALLENGE;
+    }
+    if ($dir =~ m {AdventOfCode20[0-9]{2}/}) {
+        $type = $ADVENT_OF_CODE;
+    }
+    if ($dir =~ m {Golf/StackExchange/}) {
+        $type = $GOLF;
+    }
+}
+die "Cannot figure out what we are testing" unless defined $type;
+
+#
+# Not yet...
+#
+do {...} if $type == $ADVENT_OF_CODE ||
+            $type == $GOLF;
+
+#
+# Go to the appropriate directory, if needed.
+#
+if ($type == $PERL_WEEKLY_CHALLENGE) {
+    my $target_file = "README.md";
+    #
+    # Should be in a directory with README.md
+    #
+    chdir ".." if -f "../$target_file";
+    die "Cannot figure out where we should go" unless -f $target_file;
+}
+elsif ($type == $ADVENT_OF_CODE) {
+    #
+    # Should be in Day_NN directory
+    #
+    die "Cannot figure out where we should go"
+         unless $dir =~ m {/Day_[012][0-9]$};
+}
+elsif ($type == $GOLF) {
+    #
+    # Check we're in an appropriate directory
+    #
+    die "Cannot figure out where we should go"
+         unless $dir =~ m {^[0-9]+_[A-Za-z_]+$};
+}
+
+#
+# Find the test dir; this is the directory where we find test
+# inputs, expected outputs, and configurations files. This
+# may be the current directory.
+#
+my $TEST_DIR = $type == $PERL_WEEKLY_CHALLENGE ? "t" : ".";
+
+#
+# Load any configuration files; for now, we are assuming there is only
+# one configuration file. Note that load_stems returns an array ref of 
+# configuration hashes, of which the (single) key is the name of the
+# configuration file; so we're getting the first element of the array
+# ref, and take the first element of the list of values returned.
+#
+my ($config) = values %{Config::Any:: -> load_stems ({
+                                              stems   => ["$TEST_DIR/ctest"],
+                                              use_ext => 1}) -> [0]};
+
 
 GetOptions 'slow'              =>  \my $run_slow_tests,
            'lang|language=s'   =>  \my @languages,
@@ -164,6 +237,7 @@ foreach my $challenge (@challenges) {
                     my $input      = $output_exp =~ s/output/input/r
                                                  =~ s/\.exp$//r;
                     my $exp        = `cat $output_exp`;
+                    my $run        = $input =~ s/^.*\binput-//r;
 
                     my $name = $input;
 
@@ -191,6 +265,10 @@ foreach my $challenge (@challenges) {
                                 push @options => $value;
                             }
                         }
+                    }
+
+                    if ($$config {names} {$run}) {
+                        $name = $$config {names} {$run};
                     }
 
                     if ($exp =~ s/^\s*#\s*(.*)\n//) {
