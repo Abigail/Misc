@@ -20,11 +20,26 @@ use Getopt::Long;
 use Config::Any;
 
 #
+# Read options
+#
+GetOptions 'slow'              =>  \my $run_slow_tests,
+           'lang|language=s'   =>  \my @languages,
+           'ch|challenges=i'   =>  \my @challenges,
+;
+
+#
 # First, figure out what kind of challenge we are dealing with.
 #
 my $PERL_WEEKLY_CHALLENGE = 1;
 my $ADVENT_OF_CODE        = 2;
 my $GOLF                  = 3;
+my $KEY_LANGUAGES         = "languages";
+my $KEY_TYPE              = "type";
+my $KEY_INPUTS            = "input";
+my $KEY_CHALLENGES        = "challenges";
+my $SOLUTION              = "solution";
+my $CHALLENGE             = "ch";
+
 my $pwd = `pwd`;
 my $dir;
 my $type;
@@ -42,11 +57,6 @@ if ($pwd =~ m {/GitHub/}p) {
 }
 die "Cannot figure out what we are testing" unless defined $type;
 
-#
-# Not yet...
-#
-do {...} if $type == $ADVENT_OF_CODE ||
-            $type == $GOLF;
 
 #
 # Go to the appropriate directory, if needed.
@@ -92,39 +102,42 @@ my ($config) = values %{Config::Any:: -> load_stems ({
                                               stems   => ["$TEST_DIR/ctest"],
                                               use_ext => 1}) -> [0]};
 load_language_config ($config);
-my %languages = %{$$config {languages}};
+load_type_config     ($config);
 
-use YAML;
+my %languages = %{$$config {languages}};  ## FIX ME
+
+#
+# Figure out the languages and challenges we need to handle.
+#
+my ($todo_languages, $todo_challenges) = calc_todo (config     =>  $config,
+                                                    type       =>  $type,
+                                                    argv       => \@ARGV,
+                                                    languages  => \@languages,
+                                                    challenges => \@challenges);
 
 
-GetOptions 'slow'              =>  \my $run_slow_tests,
-           'lang|language=s'   =>  \my @languages,
-;
+my $perl_exe = $languages {perl} {exe};
 
-my $perl_exe = $languages {Perl} {exe};
-
-@languages = sort {lc $a cmp lc $b} keys %languages if !@languages;
-my @challenges = @ARGV ? @ARGV : (1, 2);
-
-foreach my $challenge (@challenges) {
+foreach my $challenge (@$todo_challenges) {
     my ($dbh, $query, $tables_info);   # Only for SQL tests.
 
     my @outputs = <t/output-$challenge-*> or next;
     subtest "Challenge $challenge" => sub {
-        foreach my $language (@languages) {
-            my $info     =   $languages {$language};
-            my $exe      =   $$info {exe};
-            my $ext      =   $$info {ext};
-            my $comp     =   $$info {comp};
-            my $dir      =   $$info {dir}     // lc $language;
-            my @args     = @{$$info {args}    // []};
-            my $filter   =   $$info {filter}  // '';
-            my $ext_out  =   $$info {ext_out} // "out";
-            my $source   =  "$dir/ch-$challenge.$ext";
+        foreach my $language (@$todo_languages) {
+            my $info      =   $$config {$KEY_LANGUAGES} {$language};
+            my $exe       =   $$info {exe};
+            my $ext       =   $$info {ext};
+            my $comp      =   $$info {comp};
+            my $dir       =   $$info {dir}     // lc $language;
+            my @args      = @{$$info {args}    // []};
+            my $filter    =   $$info {filter}  // '';
+            my $ext_out   =   $$info {ext_out} // "out";
+            my $source    =  "$dir/ch-$challenge.$ext";
+            my $lang_name =   $$info {name};
             my $compiled;
             next unless -r $source;
 
-            subtest $language => sub {
+            subtest $lang_name => sub {
               SKIP: {
                 if ($exe && $exe eq "TIO") {
                     skip "No executable present, please use tio.net", 1;
@@ -156,6 +169,10 @@ foreach my $challenge (@challenges) {
                     my $run        = $input =~ s/^.*\binput-//r;
 
                     my $name = $input;
+
+                    run_test ($config, $PERL_WEEKLY_CHALLENGE, 1, "perl",
+                              {"1-1" => [$input, $output_exp],
+                               "1-2" => [$input, $output_exp]});
 
                     if (!-f $input) {
                         $name  = "No input";
@@ -227,6 +244,64 @@ foreach my $challenge (@challenges) {
 }
 
 done_testing;
+
+#
+# Find a specific setting; the first defined one of:
+#   - For a specific input/language
+#   - For a specific input
+#   - For a specific challenge
+#   - For a specific language
+#
+my sub setting ($config, $key, $type, $challenge, $language, $input) {
+    $$config {$KEY_INPUTS}     {$input} {$language} {$key}  //
+    $$config {$KEY_INPUTS}     {$input}             {$key}  //
+    $$config {$KEY_CHALLENGES} {$challenge}         {$key}  //
+    $$config {$KEY_LANGUAGES}  {$language}          {$key}  //
+    undef;
+}
+
+#
+# Given a challenge type, a challenge round (if any), and a language,
+# return the file we expect the source to be in.
+#
+my sub source ($config, $key, $type, $challenge, $language) {
+    my $source = $$config {$KEY_TYPE} {$type} {source};
+    my $ext    = $$config {$KEY_LANGUAGES} {$language} {ext};
+    my $dir    = $$config {$KEY_LANGUAGES} {$language} {dir};
+
+    $source =~ s/\Q%{dir}/$dir/gr
+            =~ s/\Q%{ext}/$ext/gr
+            =~ s/\Q%{challenge}/$challenge/gr;
+}
+
+
+#
+# Run the tests for a specific challenge/language
+#
+# $in_outputs: hash, keyed by input name (1, 1-1, etc); values
+#              are two element arrays, an input file, and an expected
+#              output file.
+#
+sub run_test ($config, $type, $challenge, $language, $in_outputs) {
+    if ($language eq 'sql') {
+        #
+        # Not yet
+        #
+        ...
+    }
+    foreach my $input (keys %$in_outputs) {
+        #
+        # Nothing special for now.
+        #
+        my @setting_args = ($type, $challenge, $language, $input);
+        my $exe  = setting ($config, "exe",  @setting_args);
+        my $args = setting ($config, "args", @setting_args) // [];
+        my ($input_file, $output_file) = @{$$in_outputs {$input}};
+
+        say "$exe @$args $exe < $input_file";
+    }
+}
+
 
 #
 # Parse the tables SQL, extract the table names, and the column names,
@@ -446,23 +521,113 @@ sub load_language_config ($config) {
     #
     foreach my $key (keys %$config) {
         next unless $key =~ m {^language/(.*)};
-        my $language = $1;
-        $$config {$KEY} {$language} = delete $$config {$key};
+        my $language = lc $1;
+        $$config {$KEY} {$language}          = delete $$config {$key};
+        $$config {$KEY} {$language} {name} //= $1;
     }
 
     #
-    # Merge
+    # Merge; we store the languages in lower case, with non-letters removed.
     #
     foreach my $language (keys %languages) {
-        $languages {$language} {dir} //= lc ($language =~ s/\PL+//r);
-        $languages {$language} {ext} //= lc ($language =~ s/\PL+//r);
+        my $lc_language = (lc $language) =~ s/\PL+//gr;
+        $languages {$language} {dir}  //= $lc_language;
+        $languages {$language} {ext}  //= $lc_language;
+        $languages {$language} {name} //=    $language; # Keep original name.
         foreach my $key (keys %{$languages {$language}}) {
-            $$config {$KEY} {$language} {$key} //=
-                 $languages {$language} {$key};
+            $$config {$KEY} {$lc_language} {$key} //=
+                    $languages {$language} {$key};
         }
     }
 }
 
+
+
+#
+# Load type dependent configuration
+#
+sub load_type_config ($config) {
+    $$config {$KEY_TYPE} {$PERL_WEEKLY_CHALLENGE} {source} ||=
+                                    "%{dir}/ch-%{challenge}.%{ext}";
+    $$config {$KEY_TYPE} {$ADVENT_OF_CODE}        {source} ||=
+                                                  "solution.%{ext}";
+    $$config {$KEY_TYPE} {$GOLF}                  {source} ||=
+                                                  "solution.%{ext}";
+}
+
+
+
+#
+# Find the languages and (if relevant) the challenges we need to process.
+#
+sub calc_todo (%args) {
+    my $config     = $args {config};
+    my $type       = $args {type};
+    my $argv       = $args {argv} || [];
+
+    #
+    # Find the default set of challenges:
+    #   -  If passed on as options, use them,
+    #   -  Else, grep anything looking like a number from @ARGV,
+    #   -  Else, use 1 .. 2.
+    #
+    my $challenges = $args {challenges} ?  [grep {/^[1-9][0-9]*$/}
+                                                @{$args {challenges}}]
+                                        :  [];
+    if (!@$challenges) {
+        $challenges = [grep {/^[1-9][0-9]*$/} @$argv];
+        $challenges = [1 .. 2] unless @$challenges;
+    }
+
+
+    #
+    # Find the default set of languages:
+    #   -  If passed on as options, use them,
+    #   -  Else, grep anything which looks like a language from @ARGV,
+    #   -  Else, use languages from the configuration.
+    #
+    my $languages  = $args {languages}  ?  [map  {lc ($_) =~ s/\PL+//gr}
+                                                @{$args {languages}}]
+                                        :  [];
+
+    if (!@$languages) {
+        #
+        # If we don't have any languages passed in, see whether there
+        # is something on @ARGV which looks like a language; if so, use it.
+        #
+        if ($argv && @$argv) {
+           $languages = [grep {$$config {$KEY_LANGUAGES} {$_}}
+                         map  {lc ($_) =~ s/\PL+//gr} @$argv];
+        }
+    }
+    #
+    # Still nothing? Get the list from the config
+    #
+    $languages = [keys %{$$config {$KEY_LANGUAGES}}] unless @$languages;
+
+    #
+    # Now, filter out languages/challenges without solutions.
+    #
+    my @lang_out;
+    my %chal_out;
+    foreach my $language (@$languages) {
+        my $ext = $$config {$KEY_LANGUAGES} {$language} {ext};
+        my $dir = $$config {$KEY_LANGUAGES} {$language} {dir};
+        if ($type == $PERL_WEEKLY_CHALLENGE) {
+            foreach my $ch (@$challenges) {
+                if (-f "$dir/$CHALLENGE-$ch.$ext") {
+                    push @lang_out => $language;
+                    $chal_out {$ch} = 1;
+                }
+            }
+        }
+        elsif ($type == $ADVENT_OF_CODE || $type == $GOLF) {
+            push @lang_out => $language if -f "$SOLUTION.$ext";
+        }
+    }
+
+    (\@lang_out, [keys %chal_out]);
+}
 
 
 __END__
