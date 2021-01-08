@@ -27,9 +27,6 @@ GetOptions 'slow'              =>  \my $run_slow_tests,
            'ch|challenges=i'   =>  \my @challenges,
 ;
 
-#
-# First, figure out what kind of challenge we are dealing with.
-#
 my $PERL_WEEKLY_CHALLENGE = 1;
 my $ADVENT_OF_CODE        = 2;
 my $GOLF                  = 3;
@@ -37,8 +34,14 @@ my $KEY_LANGUAGES         = "languages";
 my $KEY_TYPE              = "type";
 my $KEY_INPUTS            = "input";
 my $KEY_CHALLENGES        = "challenges";
-my $SOLUTION              = "solution";
-my $CHALLENGE             = "ch";
+my $INDEX_SOURCE          =  0;
+my $INDEX_TESTS           =  1;
+
+################################################################################
+#
+# First, figure out what kind of challenge we are dealing with.
+#
+################################################################################
 
 my $pwd = `pwd`;
 my $dir;
@@ -58,9 +61,12 @@ if ($pwd =~ m {/GitHub/}p) {
 die "Cannot figure out what we are testing" unless defined $type;
 
 
+################################################################################
 #
 # Go to the appropriate directory, if needed.
 #
+################################################################################
+
 if ($type == $PERL_WEEKLY_CHALLENGE) {
     my $target_file = "README.md";
     #
@@ -84,166 +90,83 @@ elsif ($type == $GOLF) {
          unless $dir =~ m {^[0-9]+_[A-Za-z_]+$};
 }
 
+################################################################################
 #
 # Find the test dir; this is the directory where we find test
 # inputs, expected outputs, and configurations files. This
 # may be the current directory.
 #
+################################################################################
+
 my $TEST_DIR = $type == $PERL_WEEKLY_CHALLENGE ? "t" : ".";
 
-#
-# Load any configuration files; for now, we are assuming there is only
-# one configuration file. Note that load_stems returns an array ref of 
-# configuration hashes, of which the (single) key is the name of the
-# configuration file; so we're getting the first element of the array
-# ref, and take the first element of the list of values returned.
-#
-my ($config) = values %{Config::Any:: -> load_stems ({
-                                              stems   => ["$TEST_DIR/ctest"],
-                                              use_ext => 1}) -> [0]};
-load_language_config ($config);
-load_type_config     ($config);
+my $config = load_config ($TEST_DIR);
 
-my %languages = %{$$config {languages}};  ## FIX ME
 
 #
 # Figure out the languages and challenges we need to handle.
 #
-my ($todo_languages, $todo_challenges) = calc_todo (config     =>  $config,
-                                                    type       =>  $type,
-                                                    argv       => \@ARGV,
-                                                    languages  => \@languages,
-                                                    challenges => \@challenges);
+my $todo = calc_todo (config     =>  $config,
+                      type       =>  $type,
+                      argv       => \@ARGV,
+                      languages  => \@languages,
+                      challenges => \@challenges);
 
 
-my $perl_exe = $languages {perl} {exe};
+################################################################################
+#
+# Iterate over the challenges, and run tests for each of them. 
+#
+################################################################################
 
-foreach my $challenge (@$todo_challenges) {
-    my ($dbh, $query, $tables_info);   # Only for SQL tests.
+foreach my $challenge (keys @$todo) {
+    my $info = $$todo [$challenge] or next;
+    my @args = ($config, $type, $challenge, $info);
+    if ($type == $PERL_WEEKLY_CHALLENGE || grep {$_} @$todo > 1) {
+        subtest "Challenge $challenge" => sub {
+            test_challenge (@args);
+        }
+    }
+    else {
+        test_challenge (@args);
+    }
+}
 
-    my @outputs = <t/output-$challenge-*> or next;
-    subtest "Challenge $challenge" => sub {
-        foreach my $language (@$todo_languages) {
-            my $info      =   $$config {$KEY_LANGUAGES} {$language};
-            my $exe       =   $$info {exe};
-            my $ext       =   $$info {ext};
-            my $comp      =   $$info {comp};
-            my $dir       =   $$info {dir}     // lc $language;
-            my @args      = @{$$info {args}    // []};
-            my $filter    =   $$info {filter}  // '';
-            my $ext_out   =   $$info {ext_out} // "out";
-            my $source    =  "$dir/ch-$challenge.$ext";
-            my $lang_name =   $$info {name};
-            my $compiled;
-            next unless -r $source;
 
-            subtest $lang_name => sub {
-              SKIP: {
-                if ($exe && $exe eq "TIO") {
-                    skip "No executable present, please use tio.net", 1;
-                }
+################################################################################
+#
+# Run tests for a single challenge; this means we iterate over all the
+# languages, and run the tests for the specific language.
+#
+################################################################################
 
-                #
-                # Some languages first need to be compiled.
-                #
-                if ($comp) {
-                    $compiled = $source =~ s/\.$ext$/.$ext_out/r;
-                    system $comp, "-o", $compiled, $source;
-                }
+sub test_challenge ($config, $type, $challenge, $info) {
+    my $sources = $$info [$INDEX_SOURCE];
+    my $tests   = $$info [$INDEX_TESTS];
 
-                #
-                # SQL requires requires creating an in-memory database,
-                # and loading some tables. For that, we need a .tables
-                # file. We also read the actual query at this time.
-                #
-                if ($language eq "SQL") {
-                    my $tables = $source =~ s/\.\Q$ext\E$/.table/r;
-                   ($dbh, $query, $tables_info) = init_sql ($source, $tables);
-                }
-
-                foreach my $output_exp (@outputs) {
-                  SKIP: {
-                    my $input      = $output_exp =~ s/output/input/r
-                                                 =~ s/\.exp$//r;
-                    my $exp        = `cat $output_exp`;
-                    my $run        = $input =~ s/^.*\binput-//r;
-
-                    my $name = $input;
-
-                    run_test ($config, $PERL_WEEKLY_CHALLENGE, 1, "perl",
-                              {"1-1" => [$input, $output_exp],
-                               "1-2" => [$input, $output_exp]});
-
-                    if (!-f $input) {
-                        $name  = "No input";
-                        $input = "/dev/null";
-                    }
-
-                    my %pragma;
-                    my @options;
-
-                    while ($exp =~ s/^\s*#%\s*(.*)\n//) {
-                        my $pragma = $1;
-                        $pragma =~ s/\s+$//;
-                        if ($pragma =~ s/^\@(\S+)\s*//) {
-                            next unless lc ($1) eq lc ($language);
-                        }
-                        if ($pragma =~ /^[-\w]+$/) {
-                            $pragma {lc $pragma} = 1;
-                            next;
-                        }
-                        if ($pragma =~ /^\s*(\w+):\s*(.*)/) {
-                            my ($key, $value) = ($1, $2);
-                            if (lc $key eq "opt") {
-                                push @options => $value;
-                            }
-                        }
-                    }
-
-                    if ($$config {names} {$run}) {
-                        $name = $$config {names} {$run};
-                    }
-
-                    if ($exp =~ s/^\s*#\s*(.*)\n//) {
-                        $name = $1;
-                    }
-
-                    skip "Skipping slow test", 1
-                        if $pragma {slow} && !$run_slow_tests;
-
-                    my $got;
-                    if ($compiled) {
-                        $got = `$perl_exe -ple '$filter' $input |\
-                              ./$compiled @options`;
-                    }
-                    elsif ($language eq "SQL") {
-                        $got = test_sql ($dbh, $query, $tables_info, $input);
-                    }
-                    else {
-                        $got = `$perl_exe -ple '$filter' $input |\
-                                $exe @args ./$source @options`;
-                    }
-
-                    s/\h+$//gm for $exp, $got;
-                    if ($pragma {trim}) {
-                        s/^\h+//gm for $exp, $got;
-                    }
-                    if ($pragma {"swap-pairs"}) {
-                        my @got = split /\n/ => $got;
-                        for (my $i = 0; $i + 1 < @got; $i += 2) {
-                            @got [$i, $i + 1] = @got [$i + 1, $i];
-                        }
-                        $got = join "\n" => @got, "";
-                    }
-                    is $got, $exp, $name;
-                }}
-                unlink $compiled if $compiled;
-            }}
+    #
+    # Iterate over the languages to be tested
+    #
+    my @languages = sort keys %$sources;
+    foreach my $language (@languages) {
+        my @args = ($config, $type, $challenge,
+                    $language, $$sources {$language}, $tests);
+        if ($type == $PERL_WEEKLY_CHALLENGE ||
+            $type == $GOLF                  ||
+            @languages > 1) {
+            subtest $$config {$KEY_LANGUAGES} {$language} {name} => sub {
+                test_language (@args);
+            }
+        }
+        else {
+            test_language (@args);
         }
     }
 }
 
+
 done_testing;
+exit;
 
 #
 # Find a specific setting; the first defined one of:
@@ -264,7 +187,7 @@ my sub setting ($config, $key, $type, $challenge, $language, $input) {
 # Given a challenge type, a challenge round (if any), and a language,
 # return the file we expect the source to be in.
 #
-my sub source ($config, $key, $type, $challenge, $language) {
+my sub source ($config, $type, $challenge, $language) {
     my $source = $$config {$KEY_TYPE} {$type} {source};
     my $ext    = $$config {$KEY_LANGUAGES} {$language} {ext};
     my $dir    = $$config {$KEY_LANGUAGES} {$language} {dir};
@@ -276,13 +199,25 @@ my sub source ($config, $key, $type, $challenge, $language) {
 
 
 #
+# Return the set of inputs, given a challenge and type.
+#
+my sub inputs ($config, $type, $challenge) {
+    my   $pattern = $$config {$KEY_TYPE} {$type} {glob_input};
+    glob $pattern =~ s/\Q%{challenge}/$challenge/gr;
+}
+
+################################################################################
+#
 # Run the tests for a specific challenge/language
 #
 # $in_outputs: hash, keyed by input name (1, 1-1, etc); values
 #              are two element arrays, an input file, and an expected
 #              output file.
 #
-sub run_test ($config, $type, $challenge, $language, $in_outputs) {
+################################################################################
+
+sub test_language ($config, $type, $challenge,
+                   $language, $source, $in_outputs) {
     if ($language eq 'sql') {
         #
         # Not yet
@@ -298,7 +233,8 @@ sub run_test ($config, $type, $challenge, $language, $in_outputs) {
         my $args = setting ($config, "args", @setting_args) // [];
         my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
-        say "$exe @$args $exe < $input_file";
+        say "$exe $source @$args < $input_file";
+        pass;
     }
 }
 
@@ -429,6 +365,36 @@ sub test_sql ($dbh, $query, $tables_info, $input) {
     $output;
 }
 
+################################################################################
+#
+# Load any configuration files; for now, we are assuming there is only
+# one configuration file. Note that load_stems returns an array ref of 
+# configuration hashes, of which the (single) key is the name of the
+# configuration file; so we're getting the first element of the array
+# ref, and take the first element of the list of values returned.
+#
+################################################################################
+
+sub load_config ($conf_dir) {
+    my $all_config = Config::Any::
+                          -> load_stems ({stems   => ["$conf_dir/ctest"],
+                                          use_ext => 1});
+
+    my $config = (values %{$$all_config [0]}) [0];
+
+    #
+    # Split any compound sections; we only handle one level deep.
+    #
+    foreach my $key (keys %$config) {
+        $key =~ m {/}p or next;
+        $$config {${^PREMATCH}} {${^POSTMATCH}} = delete $$config {$key};
+    }
+
+    load_language_config ($config);
+    load_type_config     ($config);
+
+    $config;
+}
 
 #
 # Load the language info. 
@@ -553,12 +519,35 @@ sub load_type_config ($config) {
                                                   "solution.%{ext}";
     $$config {$KEY_TYPE} {$GOLF}                  {source} ||=
                                                   "solution.%{ext}";
+
+    $$config {$KEY_TYPE} {$PERL_WEEKLY_CHALLENGE} {glob_input} ||=
+                                           "t/input-%{challenge}-*";
+    $$config {$KEY_TYPE} {$ADVENT_OF_CODE}        {glob_input} ||=
+                                                          "input-*";
+    $$config {$KEY_TYPE} {$GOLF}                  {glob_input} ||=
+                                                          "input-*";
+
 }
 
 
 
 #
-# Find the languages and (if relevant) the challenges we need to process.
+# Return a structure of things we need to process.
+# This will be an array ref; each element a challenge.
+# Each challenge will have a list of languages to process,
+# and a set of inputs/outputs.
+#
+#    [
+#        [language1, language2, ...],
+#        {
+#            test1 => [input_file1, output_file1],
+#            test2 => [input_file2, output_file2],
+#            ...,
+#        },
+#        ...
+#    ]
+#
+#
 #
 sub calc_todo (%args) {
     my $config     = $args {config};
@@ -569,14 +558,15 @@ sub calc_todo (%args) {
     # Find the default set of challenges:
     #   -  If passed on as options, use them,
     #   -  Else, grep anything looking like a number from @ARGV,
-    #   -  Else, use 1 .. 2.
+    #   -  Else, use 1 .. 2, or just 1.
     #
     my $challenges = $args {challenges} ?  [grep {/^[1-9][0-9]*$/}
                                                 @{$args {challenges}}]
                                         :  [];
     if (!@$challenges) {
         $challenges = [grep {/^[1-9][0-9]*$/} @$argv];
-        $challenges = [1 .. 2] unless @$challenges;
+        $challenges = $type == $PERL_WEEKLY_CHALLENGE ? [1 .. 2] : [1]
+                                unless @$challenges;
     }
 
 
@@ -606,28 +596,166 @@ sub calc_todo (%args) {
     $languages = [keys %{$$config {$KEY_LANGUAGES}}] unless @$languages;
 
     #
-    # Now, filter out languages/challenges without solutions.
+    # Now, find solutions.
     #
-    my @lang_out;
-    my %chal_out;
+    my @out;
+
     foreach my $language (@$languages) {
         my $ext = $$config {$KEY_LANGUAGES} {$language} {ext};
         my $dir = $$config {$KEY_LANGUAGES} {$language} {dir};
-        if ($type == $PERL_WEEKLY_CHALLENGE) {
-            foreach my $ch (@$challenges) {
-                if (-f "$dir/$CHALLENGE-$ch.$ext") {
-                    push @lang_out => $language;
-                    $chal_out {$ch} = 1;
-                }
+        foreach my $challenge (@$challenges) {
+            my $source = source $config, $type, $challenge, $language;
+            if (-f $source) {
+                $out [$challenge] [$INDEX_SOURCE] {$language} = $source;
             }
-        }
-        elsif ($type == $ADVENT_OF_CODE || $type == $GOLF) {
-            push @lang_out => $language if -f "$SOLUTION.$ext";
+            my @inputs = inputs $config, $type, $challenge;
+            foreach my $input (@inputs) {
+                $input =~ /input-/p;  ## FIXME
+                my $name = ${^POSTMATCH};
+                my $output  = $input =~ s/input/output/r;
+                   $output .= ".exp";
+                $out [$challenge] [$INDEX_TESTS] {$name} = [$input, $output];
+            }
         }
     }
 
-    (\@lang_out, [keys %chal_out]);
+    \@out;
 }
 
 
 __END__
+
+=pod
+
+my $todo_challenges;
+my $todo_languages;
+my %languages = %{$$config {languages}};  ## FIX ME
+
+my $perl_exe = $languages {perl} {exe};
+
+foreach my $challenge (@$todo_challenges) {
+    my ($dbh, $query, $tables_info);   # Only for SQL tests.
+
+    my @outputs = <t/output-$challenge-*> or next;
+    subtest "Challenge $challenge" => sub {
+        foreach my $language (@$todo_languages) {
+            my $info      =   $$config {$KEY_LANGUAGES} {$language};
+            my $exe       =   $$info {exe};
+            my $ext       =   $$info {ext};
+            my $comp      =   $$info {comp};
+            my $dir       =   $$info {dir}     // lc $language;
+            my @args      = @{$$info {args}    // []};
+            my $filter    =   $$info {filter}  // '';
+            my $ext_out   =   $$info {ext_out} // "out";
+            my $source    =  "$dir/ch-$challenge.$ext";
+            my $lang_name =   $$info {name};
+            my $compiled;
+            next unless -r $source;
+
+            subtest $lang_name => sub {
+              SKIP: {
+                if ($exe && $exe eq "TIO") {
+                    skip "No executable present, please use tio.net", 1;
+                }
+
+                #
+                # Some languages first need to be compiled.
+                #
+                if ($comp) {
+                    $compiled = $source =~ s/\.$ext$/.$ext_out/r;
+                    system $comp, "-o", $compiled, $source;
+                }
+
+                #
+                # SQL requires requires creating an in-memory database,
+                # and loading some tables. For that, we need a .tables
+                # file. We also read the actual query at this time.
+                #
+                if ($language eq "SQL") {
+                    my $tables = $source =~ s/\.\Q$ext\E$/.table/r;
+                   ($dbh, $query, $tables_info) = init_sql ($source, $tables);
+                }
+
+                foreach my $output_exp (@outputs) {
+                  SKIP: {
+                    my $input      = $output_exp =~ s/output/input/r
+                                                 =~ s/\.exp$//r;
+                    my $exp        = `cat $output_exp`;
+                    my $run        = $input =~ s/^.*\binput-//r;
+
+                    my $name = $input;
+
+                    run_test ($config, $PERL_WEEKLY_CHALLENGE, 1, "perl",
+                              {"1-1" => [$input, $output_exp],
+                               "1-2" => [$input, $output_exp]});
+
+                    if (!-f $input) {
+                        $name  = "No input";
+                        $input = "/dev/null";
+                    }
+
+                    my %pragma;
+                    my @options;
+
+                    while ($exp =~ s/^\s*#%\s*(.*)\n//) {
+                        my $pragma = $1;
+                        $pragma =~ s/\s+$//;
+                        if ($pragma =~ s/^\@(\S+)\s*//) {
+                            next unless lc ($1) eq lc ($language);
+                        }
+                        if ($pragma =~ /^[-\w]+$/) {
+                            $pragma {lc $pragma} = 1;
+                            next;
+                        }
+                        if ($pragma =~ /^\s*(\w+):\s*(.*)/) {
+                            my ($key, $value) = ($1, $2);
+                            if (lc $key eq "opt") {
+                                push @options => $value;
+                            }
+                        }
+                    }
+
+                    if ($$config {names} {$run}) {
+                        $name = $$config {names} {$run};
+                    }
+
+                    if ($exp =~ s/^\s*#\s*(.*)\n//) {
+                        $name = $1;
+                    }
+
+                    skip "Skipping slow test", 1
+                        if $pragma {slow} && !$run_slow_tests;
+
+                    my $got;
+                    if ($compiled) {
+                        $got = `$perl_exe -ple '$filter' $input |\
+                              ./$compiled @options`;
+                    }
+                    elsif ($language eq "SQL") {
+                        $got = test_sql ($dbh, $query, $tables_info, $input);
+                    }
+                    else {
+                        $got = `$perl_exe -ple '$filter' $input |\
+                                $exe @args ./$source @options`;
+                    }
+
+                    s/\h+$//gm for $exp, $got;
+                    if ($pragma {trim}) {
+                        s/^\h+//gm for $exp, $got;
+                    }
+                    if ($pragma {"swap-pairs"}) {
+                        my @got = split /\n/ => $got;
+                        for (my $i = 0; $i + 1 < @got; $i += 2) {
+                            @got [$i, $i + 1] = @got [$i + 1, $i];
+                        }
+                        $got = join "\n" => @got, "";
+                    }
+                    is $got, $exp, $name;
+                }}
+                unlink $compiled if $compiled;
+            }}
+        }
+    }
+}
+
+=cut
