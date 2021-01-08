@@ -229,12 +229,25 @@ sub test_language ($config, $type, $challenge,
         # Nothing special for now.
         #
         my @setting_args = ($type, $challenge, $language, $input);
-        my $exe  = setting ($config, "exe",  @setting_args);
-        my $args = setting ($config, "args", @setting_args) // [];
+        my $exe       = setting ($config, "exe",  @setting_args);
+        my $args      = setting ($config, "args", @setting_args)     // "";
+        my $lang_args = $$config {$KEY_LANGUAGES} {$language} {args} // "";
         my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
-        say "$exe $source @$args < $input_file";
-        pass;
+        my $command   = "$exe $lang_args $source $args < $input_file";
+
+        my $exp_out   = `cat $output_file`;
+        my $got_out   = `$command`;
+
+        #
+        # Trim output of leading/trailing whitespace.
+        #
+        my $trim = setting ($config, "trim", @setting_args);
+        unless (defined $trim && !$trim) {
+            s/^\h+//m, s/\h+$//m for $exp_out, $got_out;
+        }
+
+        is $got_out, $exp_out, $$config {names} {$input} // $input_file;
     }
 }
 
