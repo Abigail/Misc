@@ -224,7 +224,7 @@ sub test_language ($config, $type, $challenge,
         #
         ...
     }
-    foreach my $input (keys %$in_outputs) {
+    foreach my $input (sort keys %$in_outputs) {
         #
         # Nothing special for now.
         #
