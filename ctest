@@ -218,12 +218,25 @@ my sub inputs ($config, $type, $challenge) {
 
 sub test_language ($config, $type, $challenge,
                    $language, $source, $in_outputs) {
+
+    my $lang_info = $$config {$KEY_LANGUAGES} {$language};
+
     if ($language eq 'sql') {
         #
         # Not yet
         #
         ...
     }
+
+    my $compiler = $$lang_info {comp};
+    my $compiled = $source . "_out";
+    if ($compiler) {
+        system $compiler, "-o", $compiled, $source and do {
+            fail "Failed to compile $source";
+            return;
+        }
+    }
+
     foreach my $input (sort keys %$in_outputs) {
         SKIP: {
             #
@@ -238,7 +251,13 @@ sub test_language ($config, $type, $challenge,
             my $lang_args = $$config {$KEY_LANGUAGES} {$language} {args} // "";
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
-            my $command   = "$exe $lang_args $source $args < $input_file";
+            my $command;
+            if ($compiler) {
+                $command = "./$compiled $args < $input_file";
+            }
+            else {
+                $command = "$exe $lang_args $source $args < $input_file";
+            }
 
             my $exp_out   = `cat $output_file`;
             my $got_out   = `$command`;
@@ -253,6 +272,10 @@ sub test_language ($config, $type, $challenge,
 
             is $got_out, $exp_out, $$config {names} {$input} // $input_file;
         }
+    }
+
+    if ($compiler && -f $compiled) {
+        unlink $compiled;
     }
 }
 
