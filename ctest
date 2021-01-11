@@ -176,8 +176,8 @@ exit;
 #   - For a specific language
 #
 my sub setting ($config, $key, $type, $challenge, $language, $input) {
-    $$config {$KEY_INPUTS}     {$input} {$language} {$key}  //
-    $$config {$KEY_INPUTS}     {$input}             {$key}  //
+    $$config                   {$input} {$language} {$key}  //
+    $$config                   {$input}             {$key}  //
     $$config {$KEY_CHALLENGES} {$challenge}         {$key}  //
     $$config {$KEY_LANGUAGES}  {$language}          {$key}  //
     undef;
