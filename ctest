@@ -450,7 +450,8 @@ sub load_language_config ($config) {
             exe      =>   "/opt/perl/bin/perl",
             ext      =>   "pl",
         },
-        JavaScript   =>   {
+        Node         =>   {
+            name     =>   'Node.js',
             exe      =>   "/usr/local/bin/node",
             ext      =>   "js",
             dir      =>   "node",
