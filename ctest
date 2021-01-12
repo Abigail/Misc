@@ -427,8 +427,19 @@ sub load_config ($conf_dir) {
     # Split any compound sections; we only handle one level deep.
     #
     foreach my $key (keys %$config) {
-        $key =~ m {/}p or next;
-        $$config {${^PREMATCH}} {${^POSTMATCH}} = delete $$config {$key};
+        $key =~ m{[/,]} or next;
+        my $info = delete $$config {$key};
+        my ($major, $minor) = split '/' => $key;
+        foreach my $sub_major (split /,\s*/ => $major) {
+            if ($minor) {
+                foreach my $sub_minor (split /,\s*/ => $minor) {
+                    $$config {$sub_major} {$sub_minor} = $info;
+                }
+            }
+            else {
+                $$config {$sub_major} = $info;
+            }
+        }
     }
 
     load_language_config ($config);
