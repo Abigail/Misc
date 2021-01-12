@@ -246,17 +246,17 @@ sub test_language ($config, $type, $challenge,
             my $skip      = setting ($config, "skip", @setting_args);
             skip $skip, 1 if $skip;
 
-            my $exe       = setting ($config, "exe",  @setting_args);
-            my $args      = setting ($config, "args", @setting_args)     // "";
-            my $lang_args = $$config {$KEY_LANGUAGES} {$language} {args} // "";
+            my $exe       = setting ($config, "exe",      @setting_args);
+            my $args      = setting ($config, "args",     @setting_args) // [];
+            my $exe_args  = setting ($config, "exe_args", @setting_args) // [];
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
             my $command;
             if ($compiler) {
-                $command = "./$compiled $args < $input_file";
+                $command = "./$compiled @$args < $input_file";
             }
             else {
-                $command = "$exe $lang_args $source $args < $input_file";
+                $command = "$exe @$exe_args $source @$args < $input_file";
             }
 
             my $exp_out   = `cat $output_file`;
@@ -446,80 +446,80 @@ sub load_language_config ($config) {
     my $KEY  = "languages";
 
     my %languages = (
-        Perl        =>   {
-            exe     =>   "/opt/perl/bin/perl",
-            ext     =>   "pl",
+        Perl         =>   {
+            exe      =>   "/opt/perl/bin/perl",
+            ext      =>   "pl",
         },
-        JavaScript  =>   {
-            exe     =>   "/usr/local/bin/node",
-            ext     =>   "js",
-            dir     =>   "node",
+        JavaScript   =>   {
+            exe      =>   "/usr/local/bin/node",
+            ext      =>   "js",
+            dir      =>   "node",
         },
-        bc          =>   {
-            exe     =>   "/usr/bin/bc",
-            filter  =>   's/.*/main($&)/',
+        bc           =>   {
+            exe      =>   "/usr/bin/bc",
+            filter   =>   's/.*/main($&)/',
         },
-        awk         =>   {
-            exe     =>   "/usr/bin/awk",
-            args    =>   ["-f"],
+        awk          =>   {
+            exe      =>   "/usr/bin/awk",
+            exe_args =>   ["-f"],
         },
-        C           =>   {
-            comp    =>   "/usr/bin/cc",
+        C            =>   {
+            comp     =>   "/usr/bin/cc",
         },
-        SQL         =>   {
+        SQL          =>   {
         },
-       'Befunge-93' =>   {
-            ext     =>   "bf93",
-            exe     =>   "$HOME/Bin/run-language",
+       'Befunge-93'  =>   {
+            ext      =>   "bf93",
+            exe      =>   "$HOME/Bin/run-language",
         },
-        BASIC       =>   {
-            ext     =>   "bas",
-            exe     =>   "$HOME/Bin/run-language",
+        BASIC        =>   {
+            ext      =>   "bas",
+            exe      =>   "$HOME/Bin/run-language",
         },
-        Bash        =>   {
-            ext     =>   "sh",
-            exe     =>   "/bin/sh",
+        Bash         =>   {
+            ext      =>   "sh",
+            exe      =>   "/bin/sh",
         },
-        Python      =>   {
-            ext     =>   "py",
-            exe     =>   "/opt/local/bin/python",
+        Python       =>   {
+            ext      =>   "py",
+            exe      =>   "/opt/local/bin/python",
         },
-        Ruby        =>   {
-            ext     =>   "rb",
-            exe     =>   "/usr/bin/ruby",
+        Ruby         =>   {
+            ext      =>   "rb",
+            exe      =>   "/usr/bin/ruby",
         },
-        Csh         =>   {
-            exe     =>   "/bin/csh",
+        Csh          =>   {
+            exe      =>   "/bin/csh",
         },
-        Fortran     =>   {
-            ext     =>   "f90",
-            comp    =>   "/opt/local/bin/gfortran-mp-4.4",
+        Fortran      =>   {
+            ext      =>   "f90",
+            comp     =>   "/opt/local/bin/gfortran-mp-4.4",
         },
-       'Brainfuck'  =>   {
-            ext     =>   "bf",
-            exe     =>   "$HOME/Bin/brainfuck",
+       'Brainfuck'   =>   {
+            ext      =>   "bf",
+            exe      =>   "$HOME/Bin/brainfuck",
         },
-       'Ook!'       =>   {
-            exe     =>   "$HOME/Bin/ook",
+       'Ook!'        =>   {
+            exe      =>   "$HOME/Bin/ook",
         },
-        MUMPS       =>   {
-            ext     =>   "mps",
-            exe     =>   "TIO",   # Language::Mumps is really broken
+        MUMPS        =>   {
+            ext      =>   "mps",
+            exe      =>   "TIO",   # Language::Mumps is really broken
         },
-        Forth       =>   {
-            ext     =>   "fs",
-            exe     =>   "TIO",   # Could no build gforth
+        Forth        =>   {
+            ext      =>   "fs",
+            exe      =>   "TIO",   # Could no build gforth
         },
-        Chef        =>   {
-            exe     =>   "/opt/perl/bin/chef",
+        Chef         =>   {
+            exe      =>   "/opt/perl/bin/chef",
         },
-        Pascal      =>   {
-            ext     =>   "p",
-            exe     =>   "TIO",
+        Pascal       =>   {
+            ext      =>   "p",
+            exe      =>   "TIO",
         },
-        Cobol       =>   {
-            ext     =>   "cb",
-            exe     =>   "TIO",
+        Cobol        =>   {
+            ext      =>   "cb",
+            exe      =>   "TIO",
         },
     );
 
