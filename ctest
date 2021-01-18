@@ -121,6 +121,7 @@ my $todo = calc_todo (config     =>  $config,
 
 foreach my $challenge (keys @$todo) {
     my $info = $$todo [$challenge] or next;
+    next unless $$info [$INDEX_SOURCE];
     my @args = ($config, $type, $challenge, $info);
     if ($type == $PERL_WEEKLY_CHALLENGE || grep {$_} @$todo > 1) {
         subtest "Challenge $challenge" => sub {
