@@ -503,6 +503,9 @@ sub load_language_config ($config) {
             ext      =>   "f90",
             comp     =>   "/opt/local/bin/gfortran-mp-4.4",
         },
+        lua          =>   {
+            exe      =>   '/opt/local/bin/lua',
+        },
         MUMPS        =>   {
             ext      =>   "mps",
             exe      =>   "TIO",   # Language::Mumps is really broken
