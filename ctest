@@ -458,9 +458,54 @@ sub load_language_config ($config) {
     my $KEY  = "languages";
 
     my %languages = (
-        Perl         =>   {
-            exe      =>   "/opt/perl/bin/perl",
-            ext      =>   "pl",
+        awk          =>   {
+            exe      =>   "/usr/bin/awk",
+            exe_args =>   ["-f"],
+        },
+        Bash         =>   {
+            ext      =>   "sh",
+            exe      =>   "/bin/sh",
+        },
+        BASIC        =>   {
+            ext      =>   "bas",
+            exe      =>   "$HOME/Bin/run-language",
+        },
+        bc           =>   {
+            exe      =>   "/usr/bin/bc",
+            filter   =>   's/.*/main($&)/',
+        },
+       'Befunge-93'  =>   {
+            ext      =>   "bf93",
+            exe      =>   "$HOME/Bin/run-language",
+        },
+       'Brainfuck'   =>   {
+            ext      =>   "bf",
+            exe      =>   "$HOME/Bin/brainfuck",
+        },
+        C            =>   {
+            comp     =>   "/usr/bin/cc",
+        },
+        Chef         =>   {
+            exe      =>   "/opt/perl/bin/chef",
+        },
+        Cobol        =>   {
+            ext      =>   "cb",
+            exe      =>   "TIO",
+        },
+        Csh          =>   {
+            exe      =>   "/bin/csh",
+        },
+        Forth        =>   {
+            ext      =>   "fs",
+            exe      =>   "TIO",   # Could no build gforth
+        },
+        Fortran      =>   {
+            ext      =>   "f90",
+            comp     =>   "/opt/local/bin/gfortran-mp-4.4",
+        },
+        MUMPS        =>   {
+            ext      =>   "mps",
+            exe      =>   "TIO",   # Language::Mumps is really broken
         },
         Node         =>   {
             name     =>   'Node.js',
@@ -468,30 +513,16 @@ sub load_language_config ($config) {
             ext      =>   "js",
             dir      =>   "node",
         },
-        bc           =>   {
-            exe      =>   "/usr/bin/bc",
-            filter   =>   's/.*/main($&)/',
+       'Ook!'        =>   {
+            exe      =>   "$HOME/Bin/ook",
         },
-        awk          =>   {
-            exe      =>   "/usr/bin/awk",
-            exe_args =>   ["-f"],
+        Pascal       =>   {
+            ext      =>   "p",
+            exe      =>   "TIO",
         },
-        C            =>   {
-            comp     =>   "/usr/bin/cc",
-        },
-        SQL          =>   {
-        },
-       'Befunge-93'  =>   {
-            ext      =>   "bf93",
-            exe      =>   "$HOME/Bin/run-language",
-        },
-        BASIC        =>   {
-            ext      =>   "bas",
-            exe      =>   "$HOME/Bin/run-language",
-        },
-        Bash         =>   {
-            ext      =>   "sh",
-            exe      =>   "/bin/sh",
+        Perl         =>   {
+            exe      =>   "/opt/perl/bin/perl",
+            ext      =>   "pl",
         },
         Python       =>   {
             ext      =>   "py",
@@ -501,38 +532,7 @@ sub load_language_config ($config) {
             ext      =>   "rb",
             exe      =>   "/usr/bin/ruby",
         },
-        Csh          =>   {
-            exe      =>   "/bin/csh",
-        },
-        Fortran      =>   {
-            ext      =>   "f90",
-            comp     =>   "/opt/local/bin/gfortran-mp-4.4",
-        },
-       'Brainfuck'   =>   {
-            ext      =>   "bf",
-            exe      =>   "$HOME/Bin/brainfuck",
-        },
-       'Ook!'        =>   {
-            exe      =>   "$HOME/Bin/ook",
-        },
-        MUMPS        =>   {
-            ext      =>   "mps",
-            exe      =>   "TIO",   # Language::Mumps is really broken
-        },
-        Forth        =>   {
-            ext      =>   "fs",
-            exe      =>   "TIO",   # Could no build gforth
-        },
-        Chef         =>   {
-            exe      =>   "/opt/perl/bin/chef",
-        },
-        Pascal       =>   {
-            ext      =>   "p",
-            exe      =>   "TIO",
-        },
-        Cobol        =>   {
-            ext      =>   "cb",
-            exe      =>   "TIO",
+        SQL          =>   {
         },
     );
 
