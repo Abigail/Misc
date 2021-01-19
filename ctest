@@ -458,7 +458,7 @@ sub load_language_config ($config) {
     my $KEY  = "languages";
 
     my %languages = (
-        awk          =>   {
+        AWK          =>   {
             exe      =>   "/usr/bin/awk",
             exe_args =>   ["-f"],
         },
