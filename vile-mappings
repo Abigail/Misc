@@ -1,0 +1,60 @@
+;
+; Read an appropriate template, given the extension of the file name.
+; If the doesn't have an extension, we assume Perl. If there is no
+; template, nothing happens.
+;
+store-procedure read-template "Read a template"
+    setv %template "/Users/abigail/GitHub/Misc/Templates/template"
+    setv %ext &path "end" $cfilname
+    ~if &sequal %ext ""
+        setv %ext ".pl"
+        set-mode "perlmode"
+    ~endif
+
+    setv %fullfile &cat %template %ext
+
+    ~if &readable %fullfile
+        goto-beginning-of-file
+        read-file %fullfile
+        goto-end-of-file
+        position-window b
+    ~endif
+~endm
+
+;
+; Old reading of template
+;
+ 1 store-macro
+   goto-beginning-of-file
+   read-file "/Users/abigail/Perl/template"
+   set-mode "perlmode"
+   goto-end-of-file
+   previous-line
+   previous-line
+   position-window b
+   open-line-below-and-append-chars
+~endm
+
+
+;
+; Compile the current perl program
+;
+ 2 store-macro
+   save-file
+   shell-command &cat "/opt/perl/bin/perl " $cfilname
+~endm
+
+
+;
+; Run the current perl program
+;
+ 3 store-macro
+   save-file
+   shell-command &cat "/opt/perl/bin/perl -c " $cfilname
+~endm
+
+
+;bind-key execute-macro-1 ^A-p
+bind-key read-template   ^A-p
+bind-key execute-macro-2 ^A-r
+bind-key execute-macro-3 ^A-c
