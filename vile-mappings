@@ -6,7 +6,7 @@
 store-procedure read-template "Read a template"
     setv %template "/Users/abigail/GitHub/Misc/Templates/template"
     setv %ext &path "end" $cfilname
-    ~if &not %ext
+    ~if &sequal %ext "FALSE"
         setv %ext ".pl"
         set-mode "perlmode"
     ~endif
@@ -24,16 +24,16 @@ store-procedure read-template "Read a template"
 ;
 ; Old reading of template
 ;
- 1 store-macro
-   goto-beginning-of-file
-   read-file "/Users/abigail/Perl/template"
-   set-mode "perlmode"
-   goto-end-of-file
-   previous-line
-   previous-line
-   position-window b
-   open-line-below-and-append-chars
-~endm
+; 1 store-macro
+;   goto-beginning-of-file
+;   read-file "/Users/abigail/Perl/template"
+;   set-mode "perlmode"
+;   goto-end-of-file
+;   previous-line
+;   previous-line
+;   position-window b
+;   open-line-below-and-append-chars
+;~endm
 
 
 ;
