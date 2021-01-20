@@ -475,6 +475,7 @@ sub load_language_config ($config) {
             filter   =>   's/.*/main($&)/',
         },
        'Befunge-93'  =>   {
+            dir      =>   "befunge-93",
             ext      =>   "bf93",
             exe      =>   "$HOME/Bin/run-language",
         },
