@@ -6,7 +6,7 @@
 store-procedure read-template "Read a template"
     setv %template "/Users/abigail/GitHub/Misc/Templates/template"
     setv %ext &path "end" $cfilname
-    ~if &sequal %ext ""
+    ~if &not %ext
         setv %ext ".pl"
         set-mode "perlmode"
     ~endif
