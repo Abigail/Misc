@@ -5,13 +5,19 @@
 ;
 store-procedure read-template "Read a template"
     setv %template "/Users/abigail/GitHub/Misc/Templates/template"
+    setv %ch_template "/Users/abigail/GitHub/Misc/Templates/Challenge/template"
     setv %ext &path "end" $cfilname
     ~if &sequal %ext "FALSE"
         setv %ext ".pl"
         set-mode "perlmode"
     ~endif
 
-    setv %fullfile &cat %template %ext
+    setv %ch_fullfile &cat %ch_template %ext
+    ~if &and &match "/Programming_Challenges/" $cfilname &readable %ch_fullfile
+        setv %fullfile %ch_fullfile
+    ~else
+        setv %fullfile &cat %template %ext
+    ~endif
 
     ~if &readable %fullfile
         goto-beginning-of-file
