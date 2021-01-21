@@ -1,3 +1,5 @@
+#!/opt/local/bin/lua
+
 --
 -- See ../README.md
 --

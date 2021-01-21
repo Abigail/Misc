@@ -1,3 +1,5 @@
+#!/usr/bin/awk
+
 #
 # See ../README.md
 #

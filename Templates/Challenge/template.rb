@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 #
 # See ../README.md
 #

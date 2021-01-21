@@ -1,6 +1,5 @@
-//
-// Read STDIN. Split on newlines, filter out empty lines, then call "main".
-//
+#!/usr/local/bin/node
+
   require      ("fs")
 . readFileSync (0)               // Read all.
 . toString     ()                // Turn it into a string.

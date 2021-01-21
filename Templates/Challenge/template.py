@@ -1,3 +1,5 @@
+#!/opt/local/bin/python
+
 #
 # See ../READ.md
 #

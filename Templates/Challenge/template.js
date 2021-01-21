@@ -1,3 +1,5 @@
+#!/usr/local/bin/node
+
 //
 // See ../README.md
 //
