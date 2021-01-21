@@ -62,10 +62,10 @@ if ($language eq 'befunge') {
                 Befunge::Interpreter::spush ($c);
                 return;
             }
-            last if $c =~ /\S/;
+            last if chr ($c) =~ /\S/;
         }
-        while ($c =~ /^[0-9]$/) {
-            $int = 10 * $int + $c;
+        while ($c >= 0 && chr ($c) =~ /[0-9]/) {
+            $int = 10 * $int + chr $c;
             $c = get_char;
         }
         # Now $c is a not number.
@@ -84,7 +84,7 @@ if ($language eq 'befunge') {
         Befunge::Interpreter::spush ($int);
 
         # Skip any whitespace.
-        while (chr ($c) =~ /^\s$/) {
+        while ($c >= 0 && chr ($c) =~ /^\s$/) {
             $c = get_char;
         }
 
