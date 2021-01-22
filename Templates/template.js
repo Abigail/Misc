@@ -1,11 +1,9 @@
 #!/usr/local/bin/node
 
-  require      ("fs")
-. readFileSync (0)               // Read all.
-. toString     ()                // Turn it into a string.
-. split        ("\n")            // Split on newlines.
-. filter       (_ => _ . length) // Filter out empty lines.
-. map          (_ => main (_))
+
+require ('readline')
+. createInterface ({input: process . stdin})   
+. on ('line', _ => main (_))
 ;
 
 
