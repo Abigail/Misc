@@ -504,7 +504,7 @@ sub load_language_config ($config) {
             ext      =>   "f90",
             comp     =>   "/opt/local/bin/gfortran-mp-4.4",
         },
-        lua          =>   {
+        Lua          =>   {
             exe      =>   '/opt/local/bin/lua',
         },
         MUMPS        =>   {
