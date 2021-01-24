@@ -248,16 +248,16 @@ sub test_language ($config, $type, $challenge,
             skip $skip, 1 if $skip;
 
             my $exe       = setting ($config, "exe",      @setting_args);
-            my $args      = setting ($config, "args",     @setting_args) // [];
+            my $args      = setting ($config, "args",     @setting_args) // "";
             my $exe_args  = setting ($config, "exe_args", @setting_args) // [];
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
             my $command;
             if ($compiler) {
-                $command = "./$compiled @$args < $input_file";
+                $command = "./$compiled $args < $input_file";
             }
             else {
-                $command = "$exe @$exe_args $source @$args < $input_file";
+                $command = "$exe @$exe_args $source $args < $input_file";
             }
 
             my $exp_out   = `cat $output_file`;
