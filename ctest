@@ -252,6 +252,14 @@ sub test_language ($config, $type, $challenge,
             my $exe_args  = setting ($config, "exe_args", @setting_args) // [];
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
+            #
+            # We may need to separate program options from the language options.
+            #
+            if (length $args && setting ($config, "sep_args", @setting_args)) {
+                $args = setting ($config, "sep_args", @setting_args) . " " .
+                                 $args;
+            }
+
             my $command;
             if ($compiler) {
                 $command = "./$compiled $args < $input_file";
@@ -461,6 +469,7 @@ sub load_language_config ($config) {
         AWK          =>   {
             exe      =>   "/usr/bin/awk",
             exe_args =>   ["-f"],
+            sep_args =>   "--",
         },
         Bash         =>   {
             ext      =>   "sh",
