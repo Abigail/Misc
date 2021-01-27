@@ -279,6 +279,19 @@ sub test_language ($config, $type, $challenge,
                 s/^\h+//m, s/\h+$//m for $exp_out, $got_out;
             }
 
+            if (my $type = setting ($config, "sort", @setting_args)) {
+                if ($type =~ /^n/) {
+                    $got_out = join "" => map  {"$_\n"}
+                                          sort {$a <=> $b}
+                                          split "\n" => $got_out
+                }
+                else {
+                    $got_out = join "" => map  {"$_\n"}
+                                          sort {$a cmp $b}
+                                          split "\n" => $got_out
+                }
+            }
+
             is $got_out, $exp_out, $$config {names} {$input} // $input_file;
         }
     }
