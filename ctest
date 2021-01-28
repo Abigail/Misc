@@ -249,7 +249,7 @@ sub test_language ($config, $type, $challenge,
 
             my $exe       = setting ($config, "exe",      @setting_args);
             my $args      = setting ($config, "args",     @setting_args) // "";
-            my $exe_args  = setting ($config, "exe_args", @setting_args) // [];
+            my $exe_args  = setting ($config, "exe_args", @setting_args) // "";
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
             #
@@ -265,7 +265,7 @@ sub test_language ($config, $type, $challenge,
                 $command = "./$compiled $args < $input_file";
             }
             else {
-                $command = "$exe @$exe_args $source $args < $input_file";
+                $command = "$exe $exe_args $source $args < $input_file";
             }
 
             my $exp_out   = `cat $output_file`;
@@ -481,7 +481,7 @@ sub load_language_config ($config) {
     my %languages = (
         AWK          =>   {
             exe      =>   "/usr/bin/awk",
-            exe_args =>   ["-f"],
+            exe_args =>   "-f",
             sep_args =>   "--",
         },
         Bash         =>   {
