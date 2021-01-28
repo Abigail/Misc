@@ -250,6 +250,7 @@ sub test_language ($config, $type, $challenge,
             my $exe       = setting ($config, "exe",      @setting_args);
             my $args      = setting ($config, "args",     @setting_args) // "";
             my $exe_args  = setting ($config, "exe_args", @setting_args) // "";
+            my $no_input  = setting ($config, "no_input", @setting_args);
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
             #
@@ -262,11 +263,12 @@ sub test_language ($config, $type, $challenge,
 
             my $command;
             if ($compiler) {
-                $command = "./$compiled $args < $input_file";
+                $command = "./$compiled $args"
             }
             else {
-                $command = "$exe $exe_args $source $args < $input_file";
+                $command = "$exe $exe_args $source $args"
             }
+            $command     .= " < $input_file" unless $no_input;
 
             my $exp_out   = `cat $output_file`;
             my $got_out   = `$command`;
