@@ -457,11 +457,16 @@ sub load_config ($conf_dir) {
         foreach my $sub_major (split /,\s*/ => $major) {
             if ($minor) {
                 foreach my $sub_minor (split /,\s*/ => $minor) {
-                    $$config {$sub_major} {$sub_minor} = $info;
+                    foreach my $key (keys %$info) {
+                        my $value = $$info {$key};
+                        $$config {$sub_major} {$sub_minor} {$key} = $value;
+                    }
                 }
             }
             else {
-                $$config {$sub_major} = $info;
+                foreach my $key (keys %$info) {
+                    $$config {$sub_major} {$key} = $$info {$key}
+                }
             }
         }
     }
