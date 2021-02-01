@@ -177,11 +177,13 @@ exit;
 #   - For a specific language
 #
 my sub setting ($config, $key, $type, $challenge, $language, $input) {
-    $$config                   {$input} {$language} {$key}  //
-    $$config                   {$input}             {$key}  //
-    $$config {$KEY_CHALLENGES} {$challenge}         {$key}  //
-    $$config {$KEY_LANGUAGES}  {$language}          {$key}  //
-    undef;
+    my $result;
+    if (defined $input) {
+        $result = $$config {$input} {$language} {$key} //
+                  $$config {$input}             {$key};
+    }
+    $result // $$config {$KEY_CHALLENGES} {$challenge} {$key} //
+               $$config {$KEY_LANGUAGES}  {$language}  {$key};
 }
 
 #
@@ -295,6 +297,23 @@ sub test_language ($config, $type, $challenge,
             }
 
             is $got_out, $exp_out, $$config {names} {$input} // $input_file;
+        }
+    }
+
+    #
+    # If we have any additional tests, use the module they
+    # are in, and call "test" in that module. This should
+    # run whatever test it needed.
+    #
+    my $extra_tests = setting ($config, "extra_tests", $type, $challenge,
+                                $language, undef);
+    if ($extra_tests) {
+        foreach my $test (split /,\s*/ => $extra_tests) {
+            use lib 't';
+            require "$test.pm";
+            my @args = (language  =>  $language,
+                        source    =>  $source,);
+            $test -> test (@args);
         }
     }
 
