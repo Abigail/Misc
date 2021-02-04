@@ -512,7 +512,7 @@ sub load_language_config ($config) {
         },
         Bash         =>   {
             ext      =>   "sh",
-            exe      =>   "/bin/sh",
+            exe      =>   "/opt/local/bin/bash",
         },
         BASIC        =>   {
             ext      =>   "bas",
