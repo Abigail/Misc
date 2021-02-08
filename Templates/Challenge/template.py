@@ -1,7 +1,7 @@
 #!/opt/local/bin/python
 
 #
-# See ../READ.md
+# See ../README.md
 #
 
 #
