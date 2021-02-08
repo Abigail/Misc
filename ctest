@@ -219,9 +219,24 @@ my sub inputs ($config, $type, $challenge) {
 #
 ################################################################################
 
+sub test_source;
 sub test_language ($config, $type, $challenge,
-                   $language, $source, $in_outputs) {
+                   $language, $sources, $in_outputs) {
+    if (@$sources == 1) {
+        test_source $config, $type, $challenge, $language, $$sources [0],
+                    $in_outputs
+    }
+    else {
+        foreach my $source (@$sources) {
+            subtest $source => sub {
+                test_source $config, $type, $challenge, $language,
+                            $source, $in_outputs
+            }
+        }
+    }
+}
 
+sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $lang_info = $$config {$KEY_LANGUAGES} {$language};
 
     if ($language eq 'sql') {
@@ -258,7 +273,8 @@ sub test_language ($config, $type, $challenge,
             #
             # We may need to separate program options from the language options.
             #
-            if (length $args && setting ($config, "sep_args", @setting_args)) {
+            if (length $args &&
+                setting ($config, "sep_args", @setting_args)) {
                 $args = setting ($config, "sep_args", @setting_args) . " " .
                                  $args;
             }
@@ -620,7 +636,7 @@ sub load_language_config ($config) {
 #
 sub load_type_config ($config) {
     $$config {$KEY_TYPE} {$PERL_WEEKLY_CHALLENGE} {source} ||=
-                                    "%{dir}/ch-%{challenge}.%{ext}";
+                            "%{dir}/ch-%{challenge}{,[a-z]}.%{ext}";
     $$config {$KEY_TYPE} {$ADVENT_OF_CODE}        {source} ||=
                                                   "solution.%{ext}";
     $$config {$KEY_TYPE} {$GOLF}                  {source} ||=
@@ -710,9 +726,10 @@ sub calc_todo (%args) {
         my $ext = $$config {$KEY_LANGUAGES} {$language} {ext};
         my $dir = $$config {$KEY_LANGUAGES} {$language} {dir};
         foreach my $challenge (@$challenges) {
-            my $source = source $config, $type, $challenge, $language;
-            if (-f $source) {
-                $out [$challenge] [$INDEX_SOURCE] {$language} = $source;
+            my $source  = source $config, $type, $challenge, $language;
+            my @sources = grep {-f} glob $source;
+            if (@sources) {
+                $out [$challenge] [$INDEX_SOURCE] {$language} = \@sources;
             }
             my @inputs = inputs $config, $type, $challenge;
             foreach my $input (@inputs) {
