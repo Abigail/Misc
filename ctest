@@ -182,8 +182,9 @@ my sub setting ($config, $key, $type, $challenge, $language, $input) {
         $result = $$config {$input} {$language} {$key} //
                   $$config {$input}             {$key};
     }
-    $result // $$config {$KEY_CHALLENGES} {$challenge} {$key} //
-               $$config {$KEY_LANGUAGES}  {$language}  {$key};
+    $result // $$config {$KEY_CHALLENGES} {$challenge} {$language} {$key} //
+               $$config {$KEY_CHALLENGES} {$challenge}             {$key} //
+               $$config {$KEY_LANGUAGES}  {$language}              {$key};
 }
 
 #
@@ -488,13 +489,24 @@ sub load_config ($conf_dir) {
     foreach my $key (keys %$config) {
         $key =~ m{[/,]} or next;
         my $info = delete $$config {$key};
-        my ($major, $minor) = split '/' => $key;
+        my ($major, $minor, $minor2) = split '/' => $key;
         foreach my $sub_major (split /,\s*/ => $major) {
             if ($minor) {
                 foreach my $sub_minor (split /,\s*/ => $minor) {
-                    foreach my $key (keys %$info) {
-                        my $value = $$info {$key};
-                        $$config {$sub_major} {$sub_minor} {$key} = $value;
+                    if ($minor2) {
+                        foreach my $sub_minor2 (split /,\s*/ => $minor2) {
+                            foreach my $key (keys %$info) {
+                                my $value = $$info {$key};
+                                $$config {$sub_major} {$sub_minor}
+                                         {$sub_minor2} {$key} = $value;
+                            }
+                        }
+                    }
+                    else {
+                        foreach my $key (keys %$info) {
+                            my $value = $$info {$key};
+                            $$config {$sub_major} {$sub_minor} {$key} = $value;
+                        }
                     }
                 }
             }
