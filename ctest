@@ -580,6 +580,13 @@ sub load_language_config ($config) {
             ext      =>   "f90",
             comp     =>   "/opt/local/bin/gfortran-mp-4.4",
         },
+       "GNU AWK"     =>   {
+            exe      =>   "/opt/local/bin/gawk",
+            dir      =>   "awk",
+            exe_args =>   "-f",
+            sep_args =>   "--",
+            ext      =>   "gawk",
+        },
         Lua          =>   {
             exe      =>   '/opt/local/bin/lua',
         },
