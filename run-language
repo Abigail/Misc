@@ -49,7 +49,7 @@ if ($language eq 'befunge') {
         push @buffer => $char;
     }
     my sub get_char {
-        return ord pop @buffer if @buffer;
+        return pop @buffer if @buffer;
         eof (STDIN) ? -1 : ord getc STDIN;
     }
     *{"Befunge::Interpreter::input_int"} = sub {
