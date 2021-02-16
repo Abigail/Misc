@@ -83,8 +83,8 @@ if ($language eq 'befunge') {
         }
         Befunge::Interpreter::spush ($int);
 
-        # Skip any whitespace.
-        while ($c >= 0 && chr ($c) =~ /^\s$/) {
+        # Skip any horizontal whitespace.
+        while ($c >= 0 && chr ($c) =~ /^\h$/) {
             $c = get_char;
         }
 
