@@ -97,7 +97,16 @@ if ($language eq 'befunge') {
     };
     my $interpreter = Befunge::Interpreter:: -> new;
        $interpreter -> get_befunge ($program);
-       $interpreter -> process_befunge;
+    #
+    # Befunge specification says ` is greater than, but
+    # Befunge::Interpreter uses '. So, we fix the torus.
+    # 
+    # Luckely, Befunge::Interpreter uses global variables....
+    #
+    foreach my $row (@Befunge::Interpreter::torus) {
+        defined () && s/`/'/ for @$row;
+    }
+    $interpreter -> process_befunge;
 }
 elsif ($language eq 'basic') {
     use Language::Basic;
