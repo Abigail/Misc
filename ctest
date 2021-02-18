@@ -334,6 +334,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
         }
     }
 
+    #
+    # FIX ME: Should depend on settings
+    #
+    check_reference (source   => $source,
+                     language => $language);
+
     if ($compiler && -f $compiled) {
         unlink $compiled;
     }
@@ -763,6 +769,30 @@ sub calc_todo (%args) {
 
     \@out;
 }
+
+
+#
+# Tests that we will always run (possibly depending on type of challenge
+# and language)
+#
+sub check_reference (%args) {
+    my $source   = $args {source};
+    my $language = $args {language};
+    return if $language eq "befunge";
+    subtest "Check references" => sub {
+        my $name     = $source =~ s!.*/!!r;   # Get the file name
+        my $pat      = qr /\b(ch-[0-9]+[a-z]?\.\w+)/;
+        my $text     = `cat $source`;
+        my @matches  = $text =~ /$pat/g;
+        ok grep ({$_ eq $name} @matches), "Self reference";
+        if ($$config {$KEY_LANGUAGES} {$language} {comp}) {
+            my $comp = $name =~ s/\.\K\w+$/o/r;
+            @matches = grep {$_ ne $comp} @matches;
+        }
+        ok !grep ({$_ ne $name} @matches), "No other reference";
+    }
+}
+
 
 
 __END__
