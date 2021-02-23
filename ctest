@@ -559,7 +559,8 @@ sub load_language_config ($config) {
        'Befunge-93'  =>   {
             dir      =>   "befunge-93",
             ext      =>   "bf93",
-            exe      =>   "$HOME/Bin/run-language",
+            exe      =>   "/opt/local/bin/befunge-93",
+            exe_args =>   "-q",
         },
        'Brainfuck'   =>   {
             ext      =>   "bf",
