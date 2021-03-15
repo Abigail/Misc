@@ -242,9 +242,18 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $compiler = $$lang_info {comp};
     my $compiled = $source . "_out";
     if ($compiler) {
+        my $path = $$lang_info {path};
+        my $oldpath;
+        if ($path) {
+            $oldpath = $ENV {PATH} . "";
+            $ENV {PATH} = "$path:$oldpath";
+        }
         system $compiler, "-o", $compiled, $source and do {
             fail "Failed to compile $source";
             return;
+        };
+        if ($oldpath) {
+            $ENV {PATH} = $oldpath;
         }
     }
 
@@ -613,7 +622,8 @@ sub load_language_config ($config) {
         },
         Fortran         =>   {
             ext         =>   "f90",
-            comp        =>   "/opt/local/bin/gfortran-mp-4.4",
+            comp        =>   "/usr/local/opt/gfortran/bin/gfortran-10",
+            path        =>   "/usr/bin",
         },
        "GNU AWK"        =>   {
             exe         =>   "/opt/local/bin/gawk",
