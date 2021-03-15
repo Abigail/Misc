@@ -239,13 +239,6 @@ sub test_language ($config, $type, $challenge,
 sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $lang_info = $$config {$KEY_LANGUAGES} {$language};
 
-    if ($language eq 'sql') {
-        #
-        # Not yet
-        #
-        ...
-    }
-
     my $compiler = $$lang_info {comp};
     my $compiled = $source . "_out";
     if ($compiler) {
@@ -652,6 +645,7 @@ sub load_language_config ($config) {
         Pascal          =>   {
             ext         =>   "p",
             exe         =>   "TIO",
+            no_ref      =>    1,
         },
         Perl            =>   {
             exe         =>   "/opt/perl/bin/perl",
@@ -661,11 +655,16 @@ sub load_language_config ($config) {
             ext         =>   "py",
             exe         =>   "/usr/local/bin/python3",
         },
+        Tcl             =>   {
+            exe         =>   "/usr/local/opt/tcl-tk/bin/tclsh"
+        },
         Ruby            =>   {
             ext         =>   "rb",
             exe         =>   "/usr/bin/ruby",
         },
         SQL             =>   {
+            exe         =>   "/opt/local/bin/sqlite3",
+            exe_args    =>   "<",
         },
     );
 

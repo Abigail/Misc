@@ -50,9 +50,9 @@ foreach my $file (@list) {
 my @all_languages = sort {$a cmp $b} keys %languages;
 
 my $header = << '--';
-                  A B B B B B C C C C F F G L M N O P P R S
-                  W a a c e r   h o s o o o u u o o a y u Q
-                  K s s   f a   e b h r r   a m d k s t b L
+                  A B B B B B C C C C F F G L M N O P P R S T
+                  W a a c e r   h o s o o o u u o o a y u Q c
+                  K s s   f a   e b h r r   a m d k s t b L l
                     h i   u i   f o   t t     p e ! c h y
                       c   n n     l   h r     s .   a o
                           g f           a       j   l n
