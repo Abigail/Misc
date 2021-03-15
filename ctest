@@ -175,7 +175,7 @@ exit;
 #   - For a specific challenge
 #   - For a specific language
 #
-my sub setting ($config, $key, $type, $challenge, $language, $input) {
+my sub setting ($config, $key, $type, $challenge, $language, $input = undef) {
     my $result;
     if (defined $input) {
         $result = $$config {$input} {$language} {$key} //
@@ -275,7 +275,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
-            if ($exe eq 'TIO') {
+            if (defined $exe && $exe eq 'TIO') {
                 skip "No executable present on system", 1;
             }
 
@@ -367,6 +367,8 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     # FIX ME: Should depend on settings
     #
     check_reference (source   => $source,
+                     config   => $config,
+                     type     => $type,
                      language => $language);
 
     if ($compiler && -f $compiled) {
@@ -591,6 +593,7 @@ sub load_language_config ($config) {
             ext         =>   "bf93",
             exe         =>   "/opt/local/bin/befunge-93",
             exe_args    =>   "-q",
+            no_ref      =>    1,
         },
        'Brainfuck'      =>   {
             ext         =>   "bf",
@@ -605,6 +608,7 @@ sub load_language_config ($config) {
         Cobol           =>   {
             ext         =>   "cb",
             exe         =>   "TIO",
+            no_ref      =>    1,
         },
         Csh             =>   {
             exe         =>   "/bin/csh",
@@ -612,6 +616,7 @@ sub load_language_config ($config) {
         Forth           =>   {
             ext         =>   "fs",
             exe         =>   "TIO",   # Could no build gforth
+            no_ref      =>    1,
         },
         Fortran         =>   {
             ext         =>   "f90",
@@ -623,6 +628,10 @@ sub load_language_config ($config) {
             exe_args    =>   "-f",
             sep_args    =>   "--",
             ext         =>   "gawk",
+        },
+        Go              =>   {
+            exe         =>   "/usr/local/bin/go",
+            exe_args    =>   "run",
         },
         Lua             =>   {
             exe         =>   '/opt/local/bin/lua',
@@ -807,10 +816,11 @@ sub calc_todo (%args) {
 # and language)
 #
 sub check_reference (%args) {
+    my $config   = $args {config};
     my $source   = $args {source};
+    my $type     = $args {type};
     my $language = $args {language};
-    return if $language eq "befunge" ||
-              $language eq "forth";
+    return if setting $config, "no_ref", $type, "", $language;
     subtest "Check references" => sub {
         my $name     = $source =~ s!.*/!!r;   # Get the file name
         my $pat      = qr /\b(ch-[0-9]+[a-z]?\.\w+)/;
