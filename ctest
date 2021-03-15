@@ -809,7 +809,8 @@ sub calc_todo (%args) {
 sub check_reference (%args) {
     my $source   = $args {source};
     my $language = $args {language};
-    return if $language eq "befunge";
+    return if $language eq "befunge" ||
+              $language eq "forth";
     subtest "Check references" => sub {
         my $name     = $source =~ s!.*/!!r;   # Get the file name
         my $pat      = qr /\b(ch-[0-9]+[a-z]?\.\w+)/;
