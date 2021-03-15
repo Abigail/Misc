@@ -275,6 +275,10 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
+            if ($exe eq 'TIO') {
+                skip "No executable present on system", 1;
+            }
+
             #
             # We may need to separate program options from the language options.
             #
