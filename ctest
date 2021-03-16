@@ -239,21 +239,39 @@ sub test_language ($config, $type, $challenge,
 sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $lang_info = $$config {$KEY_LANGUAGES} {$language};
 
+    my $run_file = "";
     my $compiler = $$lang_info {comp};
-    my $compiled = $source . "_out";
+    my $compiled = "";
+    my @unlinked;
+
     if ($compiler) {
-        my $path = $$lang_info {path};
-        my $oldpath;
-        if ($path) {
-            $oldpath = $ENV {PATH} . "";
-            $ENV {PATH} = "$path:$oldpath";
+        if ($language eq "java") {
+            my $dest = $source =~ s/-//gr;
+            $dest =~ s!.*/!!;
+            link $source => $dest or die "link $dest, $source: $!";
+            system $compiler, $dest and do {
+                fail "Failed to compile $source";
+                unlink $dest;
+                return;
+            };
+            $run_file = $dest =~ s/\.java$//r;
+            push @unlinked => $dest, $run_file;
         }
-        system $compiler, "-o", $compiled, $source and do {
-            fail "Failed to compile $source";
-            return;
-        };
-        if ($oldpath) {
-            $ENV {PATH} = $oldpath;
+        else {
+            $compiled = $source . "_out";
+            my $path = $$lang_info {path};
+            my $oldpath;
+            if ($path) {
+                $oldpath = $ENV {PATH} . "";
+                $ENV {PATH} = "$path:$oldpath";
+            }
+            system $compiler, "-o", $compiled, $source and do {
+                fail "Failed to compile $source";
+                return;
+            };
+            if ($oldpath) {
+                $ENV {PATH} = $oldpath;
+            }
         }
     }
 
@@ -291,11 +309,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
             }
 
             my $command;
-            if ($compiler) {
+            if ($compiled) {
                 $command = "./$compiled $args"
             }
             else {
-                $command = "$exe $exe_args $source $args"
+                $run_file //= $source;
+                $command = "$exe $exe_args $run_file $args"
             }
 
             if ($line_at_a_time) {
@@ -376,6 +395,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     if ($compiler && -f $compiled) {
         unlink $compiled;
     }
+    unlink $_ for @unlinked;
 }
 
 
@@ -635,6 +655,10 @@ sub load_language_config ($config) {
         Go              =>   {
             exe         =>   "/usr/local/bin/go",
             exe_args    =>   "run",
+        },
+        Java            =>   {
+            comp        =>   "/usr/bin/javac",
+            exe         =>   "/usr/bin/java",
         },
         Lua             =>   {
             exe         =>   '/opt/local/bin/lua',
