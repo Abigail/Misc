@@ -276,7 +276,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
             my @args;
             push @args => split ' ' => $$lang_info {comp_args} if
                                        $$lang_info {comp_args};
-            push @args => "-o", $compiled;
+            if ($$lang_info {squash_o}) {
+                push @args => "-o$compiled";
+            }
+            else {
+                push @args => "-o", $compiled;
+            }
             push @args => $source;
             system $compiler, @args and do {
                 fail "Failed to compile $source";
@@ -416,6 +421,15 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     if ($compiler && -f $compiled) {
         unlink $compiled;
     }
+
+    if ($$lang_info {clean_files}) {
+        my $name = $source =~ s/\.\w+$//r;
+        foreach my $file (split /\s+/ => $$lang_info {clean_files}) {
+            $file =~ s/\bNAME\b/$name/;
+            push @unlinked => $file;
+        }
+    }
+
     unlink $_ for @unlinked;
 }
 
@@ -699,8 +713,10 @@ sub load_language_config ($config) {
         },
         Pascal          =>   {
             ext         =>   "p",
-            exe         =>   "TIO",
-            no_ref      =>    1,
+            comp        =>   "/usr/local/bin/fpc",
+            comp_args   =>   "-Fe/dev/null",
+            squash_o    =>   1,
+            clean_files =>   "NAME.o",
         },
         Perl            =>   {
             exe         =>   "/opt/perl/bin/perl",
@@ -895,7 +911,8 @@ sub check_reference (%args) {
         ok grep ({$_ eq $name} @matches), "Self reference";
         if ($$config {$KEY_LANGUAGES} {$language} {comp}) {
             my $comp = $name =~ s/\.\K\w+$/o/r;
-            @matches = grep {$_ ne $comp} @matches;
+            my $out  = $comp .= "ut";
+            @matches = grep {$_ ne $comp && $_ ne $out} @matches;
         }
         ok !grep ({$_ ne $name} @matches), "No other reference";
     }
