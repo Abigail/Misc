@@ -264,7 +264,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 return;
             };
             $run_file = $dest =~ s/\.java$//r;
-            push @unlinked => $dest, $run_file;
+            push @unlinked => $dest, $run_file, $run_file . ".class";
         }
         else {
             $compiled = $source . "_out";
