@@ -305,6 +305,8 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                             setting ($config, "line_at_a_time", @setting_args);
             my $add_to_input =
                             setting ($config, "add_to_input",   @setting_args);
+            my $join_output =
+                            setting ($config, "join_output",    @setting_args);
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
@@ -345,6 +347,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
 
             my $exp_out   = `cat $output_file`;
             my $got_out   = `$command`;
+
+            #
+            # Perhaps we need to join the output into a single string;
+            # this needs to be done before trimming.
+            #
+            $got_out =~ s/\n(?!$)//g if $join_output;
 
             #
             # Trim output of leading/trailing whitespace.
