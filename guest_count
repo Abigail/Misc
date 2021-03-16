@@ -49,19 +49,20 @@ foreach my $file (@list) {
 #
 my @all_languages = sort {$a cmp $b} keys %languages;
 
-my $header = << '--';
-                  A B B B B B C C C C F F G J L M N O P P R R S S T
-                  W a a c e r   h o s o o o a u u o o a y   u c Q c
-                  K s s   f a   e b h r r   v a m d k s t   b h L l
-                    h i   u i   f o   t t   a   p e ! c h   y e
-                      c   n n     l   h r       s .   a o     m
-                          g f           a         j   l n     e
-                          e u           n         s
-                            c
-                            k
---
+my @header_langs  = map {($map {$_} || ucfirst $_) =~ s/^\([^)]+\)\s*//r}
+                          @all_languages;
+use List::Util 'max';
+my $rows = max map {length ($_)} @header_langs;
+my @headers = (" " x (18 + 2 * @header_langs)) x $rows;
+foreach my $i (keys @header_langs) {
+    my @chars = split // => $header_langs [$i];
+    foreach my $j (keys @chars) {
+        substr $headers [$j], 18 + 2 * $i, 1, $chars [$j];
+    }
+}
+my $header = join "\n" => @headers;
 
-print $header;
+say $header;
 
 for my $week (keys @guest) {
     next unless $guest [$week];
@@ -82,7 +83,7 @@ for my $week (keys @guest) {
 }
 
 print "\n";
-print $header;
+say $header;
 
 #
 # Counts by language
