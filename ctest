@@ -112,6 +112,7 @@ my $todo = calc_todo (config     =>  $config,
                       challenges => \@challenges);
 
 
+
 ################################################################################
 #
 # Iterate over the challenges, and run tests for each of them. 
@@ -698,6 +699,11 @@ sub load_language_config ($config) {
         Lua             =>   {
             exe         =>   '/opt/local/bin/lua',
         },
+        m4              =>   {
+            name        =>   'm4',
+            exe         =>   '/usr/bin/m4',
+            no_ref      =>   1,
+        },
         MUMPS           =>   {
             ext         =>   "mps",
             exe         =>   "TIO",   # Language::Mumps is really broken
@@ -765,7 +771,7 @@ sub load_language_config ($config) {
     # Merge; we store the languages in lower case, with non-letters removed.
     #
     foreach my $language (keys %languages) {
-        my $lc_language = (lc $language) =~ s/\PL+//gr;
+        my $lc_language = (lc $language) =~ s/[^a-zA-Z0-9]//gr;
         $languages {$language} {dir}  //= $lc_language;
         $languages {$language} {ext}  //= $lc_language;
         $languages {$language} {name} //=    $language; # Keep original name.
@@ -856,7 +862,7 @@ sub calc_todo (%args) {
         #
         if ($argv && @$argv) {
            $languages = [grep {$$config {$KEY_LANGUAGES} {$_}}
-                         map  {lc ($_) =~ s/\PL+//gr} @$argv];
+                         map  {lc ($_) =~ s/[^a-zA-Z0-9]+//gr} @$argv];
         }
     }
     #
@@ -906,12 +912,12 @@ sub check_reference (%args) {
     subtest "Check references" => sub {
         my $name     = $source =~ s!.*/!!r;   # Get the file name
         my $pat      = qr /\b(ch-[0-9]+[a-z]?\.\w+)/;
-        my $text     = `cat $source`;
-        my @matches  = $text =~ /$pat/g;
+        my @text     = `cat $source`;
+        my @matches  = map {/$pat/g} grep {/Run as:/} @text;
         ok grep ({$_ eq $name} @matches), "Self reference";
         if ($$config {$KEY_LANGUAGES} {$language} {comp}) {
             my $comp = $name =~ s/\.\K\w+$/o/r;
-            my $out  = $comp .= "ut";
+            my $out  = $comp . "ut";
             @matches = grep {$_ ne $comp && $_ ne $out} @matches;
         }
         ok !grep ({$_ ne $name} @matches), "No other reference";

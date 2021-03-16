@@ -28,6 +28,7 @@ my %map  =  (
     node      =>  'Node.js',
     ook       =>  'Ook!',
     sql       =>  'SQL',
+    m4        =>  'm4',
 );
 
 #
