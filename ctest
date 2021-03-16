@@ -650,8 +650,8 @@ sub load_language_config ($config) {
         },
         Cobol           =>   {
             ext         =>   "cb",
-            exe         =>   "TIO",
-            no_ref      =>    1,
+            comp        =>   "/usr/local/bin/cobc",
+            comp_args   =>   "-xF",
         },
         Csh             =>   {
             exe         =>   "/bin/csh",
