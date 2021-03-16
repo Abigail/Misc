@@ -714,6 +714,10 @@ sub load_language_config ($config) {
             ext         =>   "js",
             dir         =>   "node",
         },
+        OCaml           =>   {
+            exe         =>   "/usr/local/bin/ocaml",
+            ext         =>   "ml",
+        },
        'Ook!'           =>   {
             exe         =>   "$HOME/Bin/ook",
         },

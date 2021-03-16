@@ -27,6 +27,7 @@ my %map  =  (
     befunge   =>  'Befunge-93',
     m4        =>  'm4',
     node      =>  'Node.js',
+    ocaml     =>  'OCaml',
     ook       =>  'Ook!',
     php       =>  'PHP',
     sql       =>  'SQL',
