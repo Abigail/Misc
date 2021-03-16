@@ -10,12 +10,19 @@ use autodie;
 use experimental 'signatures';
 use experimental 'lexical_subs';
 
+use Getopt::Long;
+
+GetOptions  'perl' => \my $perl;
+
 my $repo = "perlweeklychallenge-club";
 my $user = $ENV {USER};
 my $dir  = $ENV {HOME} . "/GitHub/Programming_Challenges/$repo";
 
 chdir $dir;
-chomp (my @list = grep {!m{/perl/}} `find challenge-*/$user/*/ch-[12].*`);
+#chomp (my @list = grep {!m{/perl/}} `find challenge-*/$user/*/ch-[12].*`);
+chomp (my @list = `find challenge-*/$user/*/ch-[12].*`);
+
+@list = grep {!m{/perl/}} @list unless $perl;
 
 use List::Util qw [sum];
 
