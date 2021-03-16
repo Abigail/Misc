@@ -239,10 +239,18 @@ sub test_language ($config, $type, $challenge,
 sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $lang_info = $$config {$KEY_LANGUAGES} {$language};
 
-    my $run_file = "";
+    my $run_file;
     my $compiler = $$lang_info {comp};
     my $compiled = "";
     my @unlinked;
+
+    if ($$lang_info {env}) {
+        my $env = $$lang_info {env};
+        foreach my $key (keys %$env) {
+            my $value = $$env {$key};
+            $ENV {$key} = $value;
+        }
+    }
 
     if ($compiler) {
         if ($language eq "java") {
@@ -691,6 +699,13 @@ sub load_language_config ($config) {
         },
         Tcl             =>   {
             exe         =>   "/usr/local/opt/tcl-tk/bin/tclsh"
+        },
+        R               =>   {
+            exe         =>   "/usr/local/bin/Rscript",
+            env         =>   {
+                LANG        =>   "en_US.UTF-8",
+                LC_ALL      =>   "en_US.UTF-8",
+            },
         },
         Ruby            =>   {
             ext         =>   "rb",
