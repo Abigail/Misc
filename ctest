@@ -749,6 +749,9 @@ sub load_language_config ($config) {
                 LC_ALL      =>   "en_US.UTF-8",
             },
         },
+        Rexx            =>   {
+            exe         =>   "/usr/local/bin/rexx",
+        },
         Ruby            =>   {
             ext         =>   "rb",
             exe         =>   "/usr/bin/ruby",
