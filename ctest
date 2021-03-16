@@ -724,6 +724,11 @@ sub load_language_config ($config) {
             ext         =>   "rb",
             exe         =>   "/usr/bin/ruby",
         },
+        Scheme          =>   {
+            ext         =>   "scm",
+            exe         =>   "/usr/local/bin/guile",
+            exe_args    =>   "--no-auto-compile",
+        },
         SQL             =>   {
             exe         =>   "/opt/local/bin/sqlite3",
             exe_args    =>   "<",
