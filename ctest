@@ -273,7 +273,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 $oldpath = $ENV {PATH} . "";
                 $ENV {PATH} = "$path:$oldpath";
             }
-            system $compiler, "-o", $compiled, $source and do {
+            my @args;
+            push @args => split ' ' => $$lang_info {comp_args} if
+                                       $$lang_info {comp_args};
+            push @args => "-o", $compiled;
+            push @args => $source;
+            system $compiler, @args and do {
                 fail "Failed to compile $source";
                 return;
             };
