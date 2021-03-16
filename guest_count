@@ -25,10 +25,11 @@ my %languages;
 my %map  =  (
     awk       =>  '(GNU) AWK',
     befunge   =>  'Befunge-93',
+    m4        =>  'm4',
     node      =>  'Node.js',
     ook       =>  'Ook!',
+    php       =>  'PHP',
     sql       =>  'SQL',
-    m4        =>  'm4',
 );
 
 #

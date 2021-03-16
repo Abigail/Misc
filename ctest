@@ -728,6 +728,9 @@ sub load_language_config ($config) {
             exe         =>   "/opt/perl/bin/perl",
             ext         =>   "pl",
         },
+        PHP             =>   {
+            exe         =>   "/usr/bin/php",
+        },
         Python          =>   {
             ext         =>   "py",
             exe         =>   "/usr/local/bin/python3",
