@@ -240,10 +240,9 @@ sub test_language ($config, $type, $challenge,
 sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $lang_info = $$config {$KEY_LANGUAGES} {$language};
 
-    my $run_file;
     my $compiler = $$lang_info {comp};
     my $compiled = "";
-    my @unlinked;
+    my @unlink;
 
     if ($$lang_info {env}) {
         my $env = $$lang_info {env};
@@ -253,44 +252,46 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
         }
     }
 
+    my $SOURCE_FILE = $source;
+    my $SOURCE_NAME = $source =~ s!.*/!!r =~ s!\..*!!r;
+
+    my $run_file = $source;
+    if ($$lang_info {remove_dash}) {
+        $run_file = $SOURCE_FILE =~ s{/ch-}{/ch}r;
+        $run_file =~ s!.*/!!;
+        link $source => $run_file or die "link $SOURCE_FILE, $run_file: $!";
+        push @unlink => $run_file;
+    }
+
+    my $RUN_FILE = $run_file;
+    my $RUN_NAME = $run_file =~ s!.*/!!r =~ s!\..*$!!r;
+    my $RUN_BASE = $run_file             =~ s!\..*$!!r;
+
     if ($compiler) {
-        if ($language eq "java") {
-            my $dest = $source =~ s/-//gr;
-            $dest =~ s!.*/!!;
-            link $source => $dest or die "link $dest, $source: $!";
-            system $compiler, $dest and do {
-                fail "Failed to compile $source";
-                unlink $dest;
-                return;
-            };
-            $run_file = $dest =~ s/\.java$//r;
-            push @unlinked => $dest, $run_file, $run_file . ".class";
+        $compiled = $run_file . "_out";
+        my $path  = $$lang_info {path};
+        my $oldpath;
+        if ($path) {
+            $oldpath = $ENV {PATH} . "";
+            $ENV {PATH} = "$path:$oldpath";
         }
-        else {
-            $compiled = $source . "_out";
-            my $path = $$lang_info {path};
-            my $oldpath;
-            if ($path) {
-                $oldpath = $ENV {PATH} . "";
-                $ENV {PATH} = "$path:$oldpath";
-            }
-            my @args;
-            push @args => split ' ' => $$lang_info {comp_args} if
-                                       $$lang_info {comp_args};
-            if ($$lang_info {squash_o}) {
-                push @args => "-o$compiled";
-            }
-            else {
-                push @args => "-o", $compiled;
-            }
-            push @args => $source;
-            system $compiler, @args and do {
-                fail "Failed to compile $source";
-                return;
-            };
-            if ($oldpath) {
-                $ENV {PATH} = $oldpath;
-            }
+        my @args;
+
+        my $comp_args = $$lang_info {comp_args} || "-o %COMPILED %RUN_FILE";
+
+        $comp_args    = $comp_args =~ s/%(?:RUN_)?NAME\b/$RUN_NAME/gr
+                                   =~ s/%SOURCE_NAME\b/$SOURCE_NAME/gr
+                                   =~ s/%SOURCE_FILE\b/$SOURCE_FILE/gr
+                                   =~ s/%RUN_FILE\b/$RUN_FILE/gr
+                                   =~ s/%COMPILED\b/$compiled/gr;
+
+        system "$compiler $comp_args" and do {
+            fail "Failed to compile $RUN_FILE";
+            return;
+        };
+
+        if ($oldpath) {
+            $ENV {PATH} = $oldpath;
         }
     }
 
@@ -305,7 +306,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
 
             my $exe       = setting ($config, "exe",      @setting_args);
             my $args      = setting ($config, "args",     @setting_args) // "";
-            my $exe_args  = setting ($config, "exe_args", @setting_args) // "";
+            my $exe_args  = setting ($config, "exe_args", @setting_args);
             my $no_input  = setting ($config, "no_input", @setting_args);
             my $line_at_a_time =
                             setting ($config, "line_at_a_time", @setting_args);
@@ -320,6 +321,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 skip "No executable present on system", 1;
             }
 
+            $exe_args //= $RUN_FILE;
+            $exe_args   = $exe_args =~ s/%(?:RUN_)?NAME\b/$RUN_NAME/gr
+                                    =~ s/%SOURCE_NAME\b/$SOURCE_NAME/gr
+                                    =~ s/%SOURCE_FILE\b/$SOURCE_FILE/gr
+                                    =~ s/%RUN_FILE\b/$RUN_FILE/gr;
+
             #
             # We may need to separate program options from the language options.
             #
@@ -330,12 +337,14 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
             }
 
             my $command;
-            if ($compiled) {
+            if ($exe) {
+                $command = "$exe $exe_args $args"
+            }
+            elsif ($compiled) {
                 $command = "./$compiled $args"
             }
             else {
-                $run_file //= $source;
-                $command = "$exe $exe_args $run_file $args"
+                die "Do not know what to do!";
             }
 
             if ($line_at_a_time) {
@@ -424,14 +433,13 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     }
 
     if ($$lang_info {clean_files}) {
-        my $name = $source =~ s/\.\w+$//r;
         foreach my $file (split /\s+/ => $$lang_info {clean_files}) {
-            $file =~ s/\bNAME\b/$name/;
-            push @unlinked => $file;
+            $file =~ s/%(?:RUN_)BASE\b/$RUN_BASE/;
+            push @unlink => $file;
         }
     }
 
-    unlink $_ for @unlinked;
+    unlink $_ for @unlink;
 }
 
 
@@ -630,7 +638,7 @@ sub load_language_config ($config) {
     my %languages = (
         AWK             =>   {
             exe         =>   "/usr/bin/awk",
-            exe_args    =>   "-f",
+            exe_args    =>   "-f %RUN_FILE",
             sep_args    =>   "--",
         },
         Bash            =>   {
@@ -650,7 +658,7 @@ sub load_language_config ($config) {
             dir         =>   "befunge-93",
             ext         =>   "bf93",
             exe         =>   "/opt/local/bin/befunge-93",
-            exe_args    =>   "-q",
+            exe_args    =>   "-q %RUN_FILE",
             no_ref      =>    1,
         },
        'Brainfuck'      =>   {
@@ -666,10 +674,19 @@ sub load_language_config ($config) {
         Cobol           =>   {
             ext         =>   "cb",
             comp        =>   "/usr/local/bin/cobc",
-            comp_args   =>   "-xF",
+            comp_args   =>   "-xF -o %COMPILED %RUN_FILE",
         },
         Csh             =>   {
             exe         =>   "/bin/csh",
+        },
+        Erlang          =>   {
+            ext         =>   "erl",
+            exe         =>   "/usr/local/bin/erl",
+            exe_args    =>   "-noshell -s %NAME main -s init stop",
+            comp        =>   "/usr/local/bin/erl",
+            comp_args   =>   "-compile %NAME",
+            remove_dash =>    1,
+            clean_files =>   "%RUN_BASE.beam",
         },
         Forth           =>   {
             ext         =>   "fs",
@@ -683,18 +700,22 @@ sub load_language_config ($config) {
         },
        "GNU AWK"        =>   {
             exe         =>   "/opt/local/bin/gawk",
-            dir         =>   "awk",
-            exe_args    =>   "-f",
+            exe_args    =>   "-f %RUN_FILE",
             sep_args    =>   "--",
+            dir         =>   "awk",
             ext         =>   "gawk",
         },
         Go              =>   {
             exe         =>   "/usr/local/bin/go",
-            exe_args    =>   "run",
+            exe_args    =>   "run %RUN_FILE",
         },
         Java            =>   {
             comp        =>   "/usr/bin/javac",
+            comp_args   =>   "%RUN_FILE",
             exe         =>   "/usr/bin/java",
+            exe_args    =>   "%RUN_NAME",
+            remove_dash =>    1,
+            clean_files =>   "%RUN_BASE.class",
         },
         Lua             =>   {
             exe         =>   '/opt/local/bin/lua',
@@ -724,9 +745,8 @@ sub load_language_config ($config) {
         Pascal          =>   {
             ext         =>   "p",
             comp        =>   "/usr/local/bin/fpc",
-            comp_args   =>   "-Fe/dev/null",
-            squash_o    =>   1,
-            clean_files =>   "NAME.o",
+            comp_args   =>   "-Fe/dev/null -o%COMPILED %RUN_FILE",
+            clean_files =>   "%RUN_BASE.o",
         },
         Perl            =>   {
             exe         =>   "/opt/perl/bin/perl",
@@ -759,11 +779,11 @@ sub load_language_config ($config) {
         Scheme          =>   {
             ext         =>   "scm",
             exe         =>   "/usr/local/bin/guile",
-            exe_args    =>   "--no-auto-compile",
+            exe_args    =>   "--no-auto-compile %RUN_FILE",
         },
         SQL             =>   {
             exe         =>   "/opt/local/bin/sqlite3",
-            exe_args    =>   "<",
+            exe_args    =>   "< %RUN_FILE",
         },
     );
 
