@@ -63,26 +63,22 @@ my @header_langs  = map {($map {$_} || ucfirst $_) =~ s/^\([^)]+\)\s*//r}
                           @all_languages;
 use List::Util 'max';
 my $rows = max map {length ($_)} @header_langs;
-my @headers = (" " x (18 + 2 * @header_langs)) x $rows;
+my @headers = (" " x (7 + 2 * @header_langs)) x $rows;
 foreach my $i (keys @header_langs) {
     my @chars = split // => $header_langs [$i];
     foreach my $j (keys @chars) {
-        substr $headers [$j], 18 + 2 * $i, 1, $chars [$j];
+        substr $headers [$j], 7 + 2 * $i, 1, $chars [$j];
     }
 }
 my $header = join "\n" => @headers;
 
-say $header;
+say $header, "\n";
 
 for my $week (keys @guest) {
     next unless $guest [$week];
-    my $header = sprintf "Week %3d, part ", $week;
     for my $part (1, 2) {
         next unless $guest [$week] [$part];
-        printf "%15s", $header;
-        $header  = " " x 9;
-        $header .= "part ";
-        print $part, " ";
+        printf "%3d-%d ", $week, $part;
         my $count = 0;
         foreach my $language (@all_languages) {
             printf " %s", $guest [$week] [$part] {$language} ? "X" : " ";
