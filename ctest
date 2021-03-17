@@ -386,6 +386,11 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 1 while $got_out =~ s/^\s*$skip_prompt\s*//m;
             }
 
+            if (my $remove_pat =
+                 setting ($config, "remove_pattern", @setting_args)) {
+                $got_out =~ s/$remove_pat//g;
+            }
+
             if (my $type = setting ($config, "sort", @setting_args)) {
                 if ($type =~ /^n/) {
                     $got_out = join "" => map  {"$_\n"}
