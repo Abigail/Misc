@@ -786,6 +786,10 @@ sub load_language_config ($config) {
             exe         =>   "/usr/local/bin/guile",
             exe_args    =>   "--no-auto-compile %RUN_FILE",
         },
+        sed             =>   {
+            exe         =>   "/usr/bin/sed",
+            exe_args    =>   "-f %RUN_FILE",
+        },
         SQL             =>   {
             exe         =>   "/opt/local/bin/sqlite3",
             exe_args    =>   "< %RUN_FILE",
