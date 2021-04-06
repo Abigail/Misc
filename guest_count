@@ -30,14 +30,16 @@ my @guest;
 my %languages;
 
 my %map  =  (
-    awk       =>  '(GNU) AWK',
-    befunge   =>  'Befunge-93',
-    m4        =>  'm4',
-    node      =>  'Node.js',
-    ocaml     =>  'OCaml',
-    ook       =>  'Ook!',
-    php       =>  'PHP',
-    sql       =>  'SQL',
+    awk         =>  '(GNU) AWK',
+    befunge     =>  'Befunge-93',
+    m4          =>  'm4',
+    node        =>  'Node.js',
+    ocaml       =>  'OCaml',
+    ook         =>  'Ook!',
+    php         =>  'PHP',
+    postscript  =>  'PostScript',
+    sed         =>  'sed',
+    sql         =>  'SQL',
 );
 
 #

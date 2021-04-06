@@ -770,6 +770,10 @@ sub load_language_config ($config) {
         PHP             =>   {
             exe         =>   "/usr/bin/php",
         },
+        PostScript      =>   {
+            exe         =>   "/opt/local/bin/ps2ascii",
+            ext         =>   "ps",
+        },
         Python          =>   {
             ext         =>   "py",
             exe         =>   "/usr/local/bin/python3",
