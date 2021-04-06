@@ -391,6 +391,16 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 $got_out =~ s/$remove_pat//g;
             }
 
+            if (my $precision = setting ($config, "precision", @setting_args)) {
+                #
+                # This only works for outputs which are numeric.
+                #
+                $got_out = join "\n" => map {sprintf "%.${precision}f" => $_}
+                                        split /\n/ => $got_out;
+                $exp_out = join "\n" => map {sprintf "%.${precision}f" => $_}
+                                        split /\n/ => $exp_out;
+            }
+
             if (my $type = setting ($config, "sort", @setting_args)) {
                 if ($type =~ /^n/) {
                     $got_out = join "" => map  {"$_\n"}
