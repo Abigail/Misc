@@ -314,6 +314,8 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                             setting ($config, "add_to_input",   @setting_args);
             my $join_output =
                             setting ($config, "join_output",    @setting_args);
+            my $exp_pattern = 
+                            setting ($config, "exp_pattern",    @setting_args);
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
@@ -419,7 +421,15 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 }
             }
 
-            is $got_out, $exp_out, $$config {names} {$input} // $input_file;
+            my $test_name = $$config {names} {$input} // $input_file;
+            if ($exp_out =~ /^qr\s*\{(.*)\}$/ ||
+                    (defined $exp_pattern && !$exp_pattern)) {
+                my $pattern = $exp_pattern ? $exp_out : $1;
+                like $got_out, qr /$pattern/, $test_name
+            }
+            else {
+                is $got_out, $exp_out, $test_name
+            }
         }
     }
 
