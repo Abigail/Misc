@@ -336,6 +336,11 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                                  $args;
             }
 
+            $args = $args =~ s/%(?:RUN_)?NAME\b/$RUN_NAME/gr
+                          =~ s/%SOURCE_NAME\b/$SOURCE_NAME/gr
+                          =~ s/%SOURCE_FILE\b/$SOURCE_FILE/gr
+                          =~ s/%RUN_FILE\b/$RUN_FILE/gr;
+
             my $command;
             if ($exe) {
                 $command = "$exe $exe_args $args"
