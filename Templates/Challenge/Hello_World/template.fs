@@ -1,0 +1,5 @@
+\
+\ See ../README.md
+\
+
+.( %TEXT)
