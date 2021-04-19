@@ -97,86 +97,38 @@ foreach my $language (sort @ARGV) {
 # Initialize the language data structure
 #
 sub init_info () {
-    awk       =>  {
-        standard    => 1,
-    },
-    bash      =>  {
-        standard    => 1,
-        ext         => 'sh',
-    },
-    basic     =>  {
-        ext         => 'bas',
-    },
-    bc        =>  {
-    },
-    befunge   =>  {
-        ext         => 'bf93',
-    },
-    c         =>  {
-        standard    => 1,
-    },
-    cobol     =>  {
-        ext         => 'cb',
-    },
-    csh       =>  {
-        ext         => 'csh',
-    },
-    erlang    =>  {
-        ext         => 'erl',
-    },
-    forth     =>  {
-        ext         => 'fs',
-    },
-    fortran   =>  {
-        ext         => 'f90',
-    },
-    go        =>  {
-    },
-    java      =>  {
-    },
-    lua       =>  {
-        standard    => 1,
-    },
-    m4        =>  {
-    },
-    node      =>  {
-        standard    => 1,
-        ext         => 'js',
-    },
-    ocaml     =>  {
-        ext         => 'ml',
-    },
-    pascal    =>  {
-        ext         => 'p',
-    },
-    php       =>  {
-    },
-    perl      =>  {
-        standard    => 1,
-        ext         => 'pl',
-    },
-    postscript=>  {
-        ext         => 'ps',
-    },
-    python    =>  {
-        standard    => 1,
-        ext         => 'py',
-    },
-    r         =>  {
-    },
-    rexx      =>  {
-    },
-    ruby      =>  {
-        standard    => 1,
-        ext         => 'rb',
-    },
-    scheme    =>  {
-        ext         => 'scm',
-    },
-    sed       =>  {
-    },
-    sql       =>  {
-    },
-    tcl       =>  {
-    },
+    awk         =>  {standard    =>  1,},
+    bash        =>  {standard    =>  1,
+                     ext         => 'sh',},
+    basic       =>  {ext         => 'bas',},
+    bc          =>  { },
+   "befunge-93" =>  {ext         => 'bf93',},
+    c           =>  {standard    =>  1,},
+    cobol       =>  {ext         => 'cb',},
+    csh         =>  {ext         => 'csh',},
+    erlang      =>  {ext         => 'erl',},
+    forth       =>  {ext         => 'fs',},
+    fortran     =>  {ext         => 'f90',},
+    go          =>  { },
+    java        =>  { },
+    lua         =>  {standard    =>  1,},
+    m4          =>  { },
+    node        =>  {standard    =>  1,
+                     ext         => 'js',},
+    ocaml       =>  {ext         => 'ml',},
+    pascal      =>  {ext         => 'p',},
+    php         =>  { },
+    perl        =>  {standard    =>  1,
+                     ext         => 'pl',},
+    postscript  =>  {ext         => 'ps',},
+    python      =>  {standard    => 1,
+                     ext         => 'py',},
+    r           =>  { },
+    rexx        =>  { },
+    ruby        =>  {standard    =>  1,
+                     ext         => 'rb',},
+    scheme      =>  {ext         => 'scm',},
+    sed         =>  { },
+    sql         =>  { },
+    tcl         =>  { },
 }
