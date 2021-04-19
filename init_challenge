@@ -1,0 +1,182 @@
+#!/opt/perl/bin/perl
+
+use 5.032;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+use experimental 'lexical_subs';
+
+use Getopt::Long;
+
+sub init_info;
+
+my $user = $ENV {USER};
+my $home = $ENV {HOME};
+
+GetOptions ("week|w=i"        =>  \my $week,
+            "challenge|c=i"   =>  \my $challenge,
+            "text|t=s"        =>  \my $text,
+            "compute|wc"      =>  \my $with_compute,
+            "all|a"           =>  \my $all,
+            "standard|s"      =>  \my $standard,
+            "force|f"         =>  \my $force,
+            );
+
+my $dir = sprintf "%s/GitHub/programming_Challenges/" .
+                    "perlweeklychallenge-club/challenge-%03d/%s" =>
+                    $ENV {HOME}, $week, $ENV {USER};
+my $TEMPLATE_DIR = sprintf "%s/GitHub/Misc/Templates/Challenge", $ENV {HOME};
+                    
+chdir $dir;
+
+
+my %info = init_info;
+
+
+if (!@ARGV) {
+    if ($all) {@ARGV = keys %info}
+    else      {@ARGV = grep {$info {$_} {standard}} keys %info}
+}
+else {
+    @ARGV = map {lc} @ARGV;
+}
+
+foreach my $language (sort @ARGV) {
+    $| = 1;
+    print "$language: ";
+    my $lang_info    = $info {$language};
+    my $ext = $$lang_info {ext} || $language;
+    my $language_dir = "$dir/$language";
+    -d $language_dir or mkdir $language_dir or die "mkdir $language_dir: $!";
+    my $file = "$language_dir/ch-$challenge.$ext";
+    if (-f $file && !$force) {
+        say "already done.";
+        next;
+    }
+
+    my $template_name = "template.$ext";
+    my @dirs = ($TEMPLATE_DIR);
+    if ($text) {
+        unshift @dirs => "$TEMPLATE_DIR/Hello_World";
+        if ($with_compute) {
+            unshift @dirs => "$TEMPLATE_DIR/Hello_World/Compute";
+        }
+    }
+
+    my ($template_file) = grep {-f} map {"$_/$template_name"} @dirs;
+
+    if (!$template_file || !-f $template_file) {
+        say "Did not find a template file";
+        next;
+    }
+
+    my $template = `cat $template_file`;
+    if ($text) {
+        $template =~ s/%TEXT/$text/;
+    }
+
+    if ($challenge != 1) {
+        s/\b(ch-?)1/${1}$challenge/g;
+    }
+
+    open my $fh, ">", $file or die "open $file: $!";
+    print   $fh $template;
+    close   $fh or die "close $file: $!";
+    say "created.";
+}
+
+
+
+
+
+
+#
+# Initialize the language data structure
+#
+sub init_info () {
+    awk       =>  {
+        standard    => 1,
+    },
+    bash      =>  {
+        standard    => 1,
+        ext         => 'sh',
+    },
+    basic     =>  {
+        ext         => 'bas',
+    },
+    bc        =>  {
+    },
+    befunge   =>  {
+        ext         => 'bf93',
+    },
+    c         =>  {
+        standard    => 1,
+    },
+    cobol     =>  {
+        ext         => 'cb',
+    },
+    csh       =>  {
+        ext         => 'csh',
+    },
+    erlang    =>  {
+        ext         => 'erl',
+    },
+    forth     =>  {
+        ext         => 'fs',
+    },
+    fortran   =>  {
+        ext         => 'f90',
+    },
+    go        =>  {
+    },
+    java      =>  {
+    },
+    lua       =>  {
+        standard    => 1,
+    },
+    m4        =>  {
+    },
+    node      =>  {
+        standard    => 1,
+        ext         => 'js',
+    },
+    ocaml     =>  {
+        ext         => 'ml',
+    },
+    pascal    =>  {
+        ext         => 'p',
+    },
+    php       =>  {
+    },
+    perl      =>  {
+        standard    => 1,
+        ext         => 'pl',
+    },
+    postscript=>  {
+        ext         => 'ps',
+    },
+    python    =>  {
+        standard    => 1,
+        ext         => 'py',
+    },
+    r         =>  {
+    },
+    rexx      =>  {
+    },
+    ruby      =>  {
+        standard    => 1,
+        ext         => 'rb',
+    },
+    scheme    =>  {
+        ext         => 'scm',
+    },
+    sed       =>  {
+    },
+    sql       =>  {
+    },
+    tcl       =>  {
+    },
+}
