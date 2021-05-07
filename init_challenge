@@ -79,7 +79,7 @@ foreach my $language (sort @ARGV) {
     }
 
     if ($challenge != 1) {
-        s/\b(ch-?)1/${1}$challenge/g;
+        $template =~ s/\b(ch-?)1/${1}$challenge/g;
     }
 
     open my $fh, ">", $file or die "open $file: $!";
@@ -113,6 +113,7 @@ sub init_info () {
     java        =>  { },
     lua         =>  {standard    =>  1,},
     m4          =>  { },
+    mmix        =>  {ext         => 'mms'},
     node        =>  {standard    =>  1,
                      ext         => 'js',},
     ocaml       =>  {ext         => 'ml',},

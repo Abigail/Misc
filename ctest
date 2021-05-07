@@ -759,6 +759,13 @@ sub load_language_config ($config) {
             exe         =>   '/usr/bin/m4',
             no_ref      =>   1,
         },
+        MMIX            =>   {
+            ext         =>   "mms",
+            comp        =>   "/usr/local/bin/mmixal",
+            comp_args   =>   "-o %SOURCE_NAME.out %SOURCE_FILE",
+            exe         =>   "/usr/local/bin/mmix",
+            exe_args    =>   "-q %SOURCE_NAME.out",
+        },
         MUMPS           =>   {
             ext         =>   "mps",
             exe         =>   "TIO",   # Language::Mumps is really broken
