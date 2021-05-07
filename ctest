@@ -316,8 +316,12 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                             setting ($config, "join_output",    @setting_args);
             my $exp_pattern = 
                             setting ($config, "exp_pattern",    @setting_args);
+            my $input_from  =
+                            setting ($config, "input_file",     @setting_args);
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
+
+            $input_file = $input_from if $input_from;
 
             if (defined $exe && $exe eq 'TIO') {
                 skip "No executable present on system", 1;
