@@ -385,7 +385,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
             #
             my $trim = setting ($config, "trim", @setting_args);
             unless (defined $trim && !$trim) {
-                s/^\h+//m, s/\h+$//m for $exp_out, $got_out;
+                s/^\h+//mg, s/\h+$//mg for $exp_out, $got_out;
             }
 
             #
