@@ -237,6 +237,115 @@ sub test_language ($config, $type, $challenge,
     }
 }
 
+
+sub do_a_run (%params) {
+    my $exe             =  $params {exe};
+    my $exe_args        =  $params {exe_args};
+    my $args            =  $params {args};
+    my $line_at_a_time  =  $params {line_at_a_time};
+    my $input_file      =  $params {input_file};
+    my $add_to_input    =  $params {add_to_input};
+    my $output_file     =  $params {output_file};
+    my $join_output     =  $params {join_output};
+    my $trim            =  $params {trim};
+    my $skip_prompt     =  $params {skip_prompt};
+    my $remove_pat      =  $params {remove_pat};
+    my $precision       =  $params {precision};
+    my $sort_type       =  $params {sort_type};
+    my $compiled        =  $params {compiled};
+    my $no_input        =  $params {no_input};
+    my $test_name       =  $params {test_name};
+    my $exp_pattern     =  $params {exp_pattern};
+    my $run_type        =  $params {run_type} // "";
+
+    my $command;
+    if ($exe) {
+        $command = "$exe $exe_args $run_type $args"
+    }
+    elsif ($compiled) {
+        $command = "./$compiled $run_type $args"
+    }
+    else {
+        die "Do not know what to do!";
+    }
+
+    if ($line_at_a_time) {
+        my ($lines) = `wc -l $input_file` =~ /([0-9]+)/;
+        my @cmmds = map {"head -$_ $input_file | tail -1 | $command"}
+                          1 .. $lines;
+        $command = join ";" => @cmmds;
+    }
+    elsif (defined $add_to_input) {
+        $command  = "(cat $input_file; echo '$add_to_input') | $command"
+    }
+    else {
+        $command .= " < $input_file" unless $no_input;
+    }
+
+    my $exp_out   = `cat $output_file`;
+    my $got_out   = `$command`;
+
+    #
+    # Perhaps we need to join the output into a single string;
+    # this needs to be done before trimming.
+    #
+    $got_out =~ s/\n(?!$)//g if $join_output;
+
+    #
+    # Trim output of leading/trailing whitespace.
+    #
+    unless (defined $trim && !$trim) {
+        s/^\h+//mg, s/\h+$//mg for $exp_out, $got_out;
+    }
+
+    #
+    # If a language outputs an unsurpressable prompt,
+    # we will eliminate it.
+    #
+    if ($skip_prompt) {
+        1 while $got_out =~ s/^\s*$skip_prompt\s*//m;
+    }
+
+    if ($remove_pat) {
+        $got_out =~ s/$remove_pat//g;
+    }
+
+    if ($precision) {
+        #
+        # This only works for outputs which are numeric.
+        #
+        $got_out = join "\n" => map {sprintf "%.${precision}f" => $_}
+                                split /\n/ => $got_out;
+        $exp_out = join "\n" => map {sprintf "%.${precision}f" => $_}
+                                split /\n/ => $exp_out;
+    }
+
+    if ($sort_type) {
+        if ($sort_type =~ /^n/) {
+            $got_out = join "" => map  {"$_\n"}
+                                  sort {$a <=> $b}
+                                  split "\n" => $got_out
+        }
+        else {
+            $got_out = join "" => map  {"$_\n"}
+                                  sort {$a cmp $b}
+                                  split "\n" => $got_out
+        }
+    }
+
+    if ($exp_out =~ /^qr\s*\{(.*)\}$/ ||
+            (defined $exp_pattern && !$exp_pattern)) {
+        my $pattern = $exp_pattern ? $exp_out : $1;
+        like $got_out, qr /$pattern/, $test_name
+    }
+    else {
+        is $got_out, $exp_out, $test_name
+    }
+}
+
+
+
+
 sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $lang_info = $$config {$KEY_LANGUAGES} {$language};
 
@@ -318,6 +427,14 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                             setting ($config, "exp_pattern",    @setting_args);
             my $input_from  =
                             setting ($config, "input_file",     @setting_args);
+            my $run_types = setting ($config, "run_types", @setting_args) // "";
+            my $trim      = setting ($config, "trim",      @setting_args) // 1;
+            my $skip_prompt =
+                            setting ($config, "skip_prompt", @setting_args);
+            my $remove_pat  =
+                            setting ($config, "remove_pattern", @setting_args);
+            my $precision = setting ($config, "precision", @setting_args);
+            my $sort_type = setting ($config, "sort", @setting_args);
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
@@ -347,92 +464,37 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                           =~ s/%SOURCE_FILE\b/$SOURCE_FILE/gr
                           =~ s/%RUN_FILE\b/$RUN_FILE/gr;
 
-            my $command;
-            if ($exe) {
-                $command = "$exe $exe_args $args"
-            }
-            elsif ($compiled) {
-                $command = "./$compiled $args"
-            }
-            else {
-                die "Do not know what to do!";
-            }
-
-            if ($line_at_a_time) {
-                my ($lines) = `wc -l $input_file` =~ /([0-9]+)/;
-                my @cmmds = map {"head -$_ $input_file | tail -1 | $command"}
-                                  1 .. $lines;
-                $command = join ";" => @cmmds;
-            }
-            elsif (defined $add_to_input) {
-                $command  = "(cat $input_file; echo '$add_to_input') | $command"
-            }
-            else {
-                $command .= " < $input_file" unless $no_input;
-            }
-
-            my $exp_out   = `cat $output_file`;
-            my $got_out   = `$command`;
-
-            #
-            # Perhaps we need to join the output into a single string;
-            # this needs to be done before trimming.
-            #
-            $got_out =~ s/\n(?!$)//g if $join_output;
-
-            #
-            # Trim output of leading/trailing whitespace.
-            #
-            my $trim = setting ($config, "trim", @setting_args);
-            unless (defined $trim && !$trim) {
-                s/^\h+//mg, s/\h+$//mg for $exp_out, $got_out;
-            }
-
-            #
-            # If a language outputs an unsurpressable prompt,
-            # we will eliminate it.
-            #
-            if (my $skip_prompt =
-                 setting ($config, "skip_prompt", @setting_args)) {
-                1 while $got_out =~ s/^\s*$skip_prompt\s*//m;
-            }
-
-            if (my $remove_pat =
-                 setting ($config, "remove_pattern", @setting_args)) {
-                $got_out =~ s/$remove_pat//g;
-            }
-
-            if (my $precision = setting ($config, "precision", @setting_args)) {
-                #
-                # This only works for outputs which are numeric.
-                #
-                $got_out = join "\n" => map {sprintf "%.${precision}f" => $_}
-                                        split /\n/ => $got_out;
-                $exp_out = join "\n" => map {sprintf "%.${precision}f" => $_}
-                                        split /\n/ => $exp_out;
-            }
-
-            if (my $type = setting ($config, "sort", @setting_args)) {
-                if ($type =~ /^n/) {
-                    $got_out = join "" => map  {"$_\n"}
-                                          sort {$a <=> $b}
-                                          split "\n" => $got_out
-                }
-                else {
-                    $got_out = join "" => map  {"$_\n"}
-                                          sort {$a cmp $b}
-                                          split "\n" => $got_out
-                }
-            }
-
             my $test_name = $$config {names} {$input} // $input_file;
-            if ($exp_out =~ /^qr\s*\{(.*)\}$/ ||
-                    (defined $exp_pattern && !$exp_pattern)) {
-                my $pattern = $exp_pattern ? $exp_out : $1;
-                like $got_out, qr /$pattern/, $test_name
+
+            my $params = {
+                exe            => $exe,
+                exe_args       => $exe_args,
+                args           => $args,
+                line_at_a_time => $line_at_a_time,
+                input_file     => $input_file,
+                add_to_input   => $add_to_input,
+                output_file    => $output_file,
+                join_output    => $join_output,
+                trim           => $trim,
+                skip_prompt    => $skip_prompt,
+                remove_pat     => $remove_pat,
+                precision      => $precision,
+                sort_type      => $sort_type,
+                compiled       => $compiled,
+                no_input       => $no_input,
+                exp_pattern    => $exp_pattern,
+                test_name      => $test_name,
+            };
+            if ($run_types) {
+                subtest $test_name => sub {
+                    foreach my $run_type (split /[,\s]+/ => $run_types) {
+                        do_a_run %$params, test_name => $run_type,
+                                           run_type  => $run_type;
+                    }
+                }
             }
             else {
-                is $got_out, $exp_out, $test_name
+                do_a_run %$params;
             }
         }
     }
@@ -654,7 +716,7 @@ sub load_config ($conf_dir) {
             }
         }
     }
-
+    
     load_language_config ($config);
     load_type_config     ($config);
 
