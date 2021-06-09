@@ -36,6 +36,7 @@ my %map  =  (
     node        =>  'Node.js',
     ocaml       =>  'OCaml',
     ook         =>  'Ook!',
+    mmix        =>  'MMIX',
     php         =>  'PHP',
     postscript  =>  'PostScript',
     sed         =>  'sed',
