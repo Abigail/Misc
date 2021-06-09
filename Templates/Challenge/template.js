@@ -8,12 +8,11 @@
 // Run as: node ch-1.js < input-file
 //
 
-require ('readline')
+  require ('readline')
 . createInterface ({input: process . stdin})   
-. on ('line', _ => main (_))
-;
+. on              ('line', line => main (line))
 
 
-function main (_) {
-    console . log (_);
+function main (line) {
+    console . log (line);
 }
