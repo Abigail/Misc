@@ -3,7 +3,7 @@
 //
 
 //
-// Run as: ln ch-1.java ch1.java; javac ch1; java ch1 < input-file
+// Run as: ln ch-1.java ch1.java; javac ch1.java; java ch1 < input-file
 //
 
 public class ch1 {
