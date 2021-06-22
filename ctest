@@ -827,6 +827,7 @@ sub load_language_config ($config) {
             comp_args   =>   "-o %SOURCE_NAME.out %SOURCE_FILE",
             exe         =>   "/usr/local/bin/mmix",
             exe_args    =>   "-q %SOURCE_NAME.out",
+            no_ref      =>    1,
         },
         MUMPS           =>   {
             ext         =>   "mps",
