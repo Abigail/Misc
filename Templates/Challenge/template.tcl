@@ -3,7 +3,7 @@
 #
 
 #
-# Run as: tclsh ch-1.tcl
+# Run as: tclsh ch-1.tcl < input-file
 #
 
 while {[gets stdin line] >= 0} {
