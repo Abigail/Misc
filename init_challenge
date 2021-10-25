@@ -19,6 +19,7 @@ my $home = $ENV {HOME};
 GetOptions ("week|w=i"        =>  \my $week,
             "challenge|c=i"   =>  \my $challenge,
             "text|t=s"        =>  \my $text,
+            "text-file|tf=s"  =>  \my $text_file,
             "compute|wc"      =>  \my $with_compute,
             "all|a"           =>  \my $all,
             "standard|s"      =>  \my $standard,
@@ -59,7 +60,7 @@ foreach my $language (sort @ARGV) {
 
     my $template_name = "template.$ext";
     my @dirs = ($TEMPLATE_DIR);
-    if ($text) {
+    if ($text || $text_file) {
         unshift @dirs => "$TEMPLATE_DIR/Hello_World";
         if ($with_compute) {
             unshift @dirs => "$TEMPLATE_DIR/Hello_World/Compute";
@@ -74,8 +75,15 @@ foreach my $language (sort @ARGV) {
     }
 
     my $template = `cat $template_file`;
-    if ($text) {
-        $template =~ s/%TEXT/$text/;
+ #  if ($text) {
+ #      $template =~ s/%TEXT/$text/;
+ #  }
+    if ($text_file || $text) {
+        my @lines = $text_file ? `cat $text_file` : ($text);
+        chomp @lines;
+        $template = join "\n" =>  map {/%TEXT/ ? ($_) x @lines : $_}
+                                         split /\n/ => $template;
+        $template =~ s/%TEXT/$_/ for @lines;
     }
 
     if ($challenge != 1) {
