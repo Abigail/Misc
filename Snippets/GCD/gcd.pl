@@ -4,13 +4,12 @@
 #
 sub gcd;
 sub gcd ($u, $v) {
-    return $u if $u == $v || !$v;
-    return $v if             !$u;
-    my $u_odd = $u % 2;
-    my $v_odd = $v % 2;
-    return gcd ($u >> 1, $v >> 1) << 1 if !$u_odd && !$v_odd;
-    return gcd ($u >> 1, $v)           if !$u_odd &&  $v_odd;
-    return gcd ($u,      $v >> 1)      if  $u_odd && !$v_odd;
-    return gcd ($u - $v, $v)           if  $u     >   $v;
-    return gcd ($v - $u, $u);
+    my ($u_odd, $v_odd) = ($u % 2, $v % 2);
+       $u == $v || !$v     ? $u
+    :              !$u     ? $v
+    : !$u_odd   && !$v_odd ? gcd ($u >> 1, $v >> 1) << 1
+    : !$u_odd   &&  $v_odd ? gcd ($u >> 1, $v)
+    :  $u_odd   && !$v_odd ? gcd ($u,      $v >> 1)
+    :  $u       >   $v     ? gcd ($u - $v, $v)
+    :                        gcd ($v - $u, $u)
 }
