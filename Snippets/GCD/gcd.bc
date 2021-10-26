@@ -1,0 +1,13 @@
+#
+# Find the GCD, using Euclids algorithm
+#    (https://en.wikipedia.org/wiki/Euclidean_algorithm#Implementations)
+#
+define g(a, b) {
+    if (b > a) {
+        return g(b, a)
+    }
+    if (b > 0) {
+        return g(b, a % b)
+    }
+    return (a)
+}
