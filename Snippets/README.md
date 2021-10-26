@@ -17,6 +17,7 @@ Find the greatest common divider of two numbers.
 * [Lua](GCD/gcd.lua)
 * [Perl](GCD/gcd.pl)
 * [Python](GCD/gcd.py)
+* [R](GCD/gcd.r)
 * [Ruby](GCD/gcd.rb)
 * [Scheme](GCD/gcd.scm)
 * [Tcl](GCD/gcd.tcl)
