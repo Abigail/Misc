@@ -12,6 +12,7 @@ Find the greatest common divider of two numbers.
 * [bc](GCD/gcd.bc)
 * [C](GCD/gcd.c)
 * [Go](GCD/gcd.go)
+* [Java](GCD/gcd.java)
 * [Node.js](GCD/gcd.js)
 * [Lua](GCD/gcd.lua)
 * [Perl](GCD/gcd.pl)
