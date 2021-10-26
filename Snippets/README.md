@@ -37,6 +37,7 @@ that is, n == m^p for some non-negative integer p. Returns false otherwise.
 * [Lua](Is_Power_Of_N/pon.lua)
 * [Perl](Is_Power_Of_N/pon.pl)
 * [Python](Is_Power_Of_N/pon.py)
+* [R](Is_Power_Of_N/pon.r)
 * [Ruby](Is_Power_Of_N/pon.rb)
 * [Scheme](Is_Power_Of_N/pon.scm)
 * [Tcl](Is_Power_Of_N/pon.tcl)
