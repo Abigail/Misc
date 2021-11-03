@@ -1,0 +1,12 @@
+#
+# Given a number 'num', return its reverse
+#
+define r (n) {
+    v = 0
+    while (n > 0) {
+        v *= 10
+        v += n % 10
+        n /= 10
+    }
+    return (v)
+}

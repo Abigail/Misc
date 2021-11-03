@@ -43,3 +43,23 @@ that is, n == m^p for some non-negative integer p. Returns false otherwise.
 * [Ruby](Is_Power_Of_N/pon.rb)
 * [Scheme](Is_Power_Of_N/pon.scm)
 * [Tcl](Is_Power_Of_N/pon.tcl)
+
+### Reverse
+
+Given a string or an integer, reverse it.
+
+* [AWK](Reverse/rev.awk)
+* [Bash](Reverse/rev.sh)
+* [bc](Reverse/rev.bc)
+* [C](Reverse/rev.c)
+* [Go](Reverse/rev.go)
+* [Java](Reverse/rev.java)
+* [Node.js](Reverse/rev.js)
+* [Lua](Reverse/rev.lua)
+* [Pascal](Reverse/rev.p)
+* [Perl](Reverse/rev.pl)
+* [Python](Reverse/rev.py)
+* [R](Reverse/rev.r)
+* [Ruby](Reverse/rev.rb)
+* [Scheme](Reverse/rev.scm)
+* [Tcl](Reverse/rev.tcl)
