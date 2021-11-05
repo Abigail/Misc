@@ -4,6 +4,16 @@ A bunch of code snippets we seem to need more than once in coding
 challenges. The snippets are useful to copy-and-paste.
 
 ## Content
+
+### DayOfWeek
+
+Calculate the day of week given a year, month and day. Also methods
+to determine leap years, and doomsday values.
+
+* [Node.js](DayOfWeek/dow.js)
+* [Perl](DayOfWeek/dow.pl)
+
+
 ### GCD
 Find the greatest common divider of two numbers.
 
@@ -63,3 +73,17 @@ Given a string or an integer, reverse it.
 * [Ruby](Reverse/rev.rb)
 * [Scheme](Reverse/rev.scm)
 * [Tcl](Reverse/rev.tcl)
+
+### Sum of Digits
+
+Given one or more numbers, return the sum of their digits.
+
+* [AWK](Sum_of_Digits/sod.awk)
+* [Bash](Sum_of_Digits/sod.bash)
+* [C](Sum_of_Digits/sod.c)
+* [Lua](Sum_of_Digits/sod.lua)
+* [Node.js](Sum_of_Digits/sod.js)
+* [Perl](Sum_of_Digits/sod.pl)
+* [Python](Sum_of_Digits/sod.py)
+* [Ruby](Sum_of_Digits/sod.rb)
+
