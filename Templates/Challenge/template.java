@@ -11,15 +11,8 @@ import java.util.*;
 public class ch1 {
     public static void main (String [] args) {
         Scanner scanner = new Scanner (System . in);
-        try {
-            while (true) {
-                String line = scanner . nextLine ();
-            }
-        }
-        catch (Exception e) {
-            //
-            // EOF
-            //
+        while (scanner . hasNextLine ()) {
+            String line = scanner . nextLine ();
         }
     }
 }
