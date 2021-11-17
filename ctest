@@ -245,6 +245,7 @@ sub do_a_run (%params) {
     my $line_at_a_time  =  $params {line_at_a_time};
     my $input_file      =  $params {input_file};
     my $add_to_input    =  $params {add_to_input};
+    my $add_to_line     =  $params {add_to_line};
     my $output_file     =  $params {output_file};
     my $join_output     =  $params {join_output};
     my $trim            =  $params {trim};
@@ -275,11 +276,16 @@ sub do_a_run (%params) {
                           1 .. $lines;
         $command = join ";" => @cmmds;
     }
-    elsif (defined $add_to_input) {
-        $command  = "(cat $input_file; echo '$add_to_input') | $command"
-    }
-    else {
-        $command .= " < $input_file" unless $no_input;
+    elsif (!$no_input) {
+        my $cmd = "(cat $input_file";
+        if (defined $add_to_line) {
+            my $add = quotemeta $add_to_line;
+            $cmd .= " | perl -ple '\$_ .= qq [ $add]'"
+        }
+        if (defined $add_to_input) {
+            $cmd .= "; echo '$add_to_input'";
+        }
+        $command = "$cmd) | $command";
     }
 
     my $exp_out   = `cat $output_file`;
@@ -421,6 +427,8 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                             setting ($config, "line_at_a_time", @setting_args);
             my $add_to_input =
                             setting ($config, "add_to_input",   @setting_args);
+            my $add_to_line =
+                            setting ($config, "add_to_line",    @setting_args);
             my $join_output =
                             setting ($config, "join_output",    @setting_args);
             my $exp_pattern = 
@@ -473,6 +481,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 line_at_a_time => $line_at_a_time,
                 input_file     => $input_file,
                 add_to_input   => $add_to_input,
+                add_to_line    => $add_to_line,
                 output_file    => $output_file,
                 join_output    => $join_output,
                 trim           => $trim,
