@@ -5,6 +5,27 @@ challenges. The snippets are useful to copy-and-paste.
 
 ## Content
 
+### Bin_Dec
+
+Take a (string) binary representation of a number, and return its
+(decimal) equivalent integer. And the reverse.
+
+* [AWK](Bin_Dec/bd.awk)
+* [Bash](Bin_Dec/bd.sh)
+* [bc](Bin_Dec/bd.bc)
+* [C](Bin_Dec/bd.c)
+* [Go](Bin_Dec/bd.go)
+* [Java](Bin_Dec/bd.java)
+* [Node.js](Bin_Dec/bd.js)
+* [Lua](Bin_Dec/bd.lua)
+* [Pascal](Bin_Dec/bd.p)
+* [Perl](Bin_Dec/bd.pl)
+* [Python](Bin_Dec/bd.py)
+* [R](Bin_Dec/bd.r)
+* [Ruby](Bin_Dec/bd.rb)
+* [Scheme](Bin_Dec/bd.scm)
+* [Tcl](Bin_Dec/bd.tcl)
+
 ### DayOfWeek
 
 Calculate the day of week given a year, month and day. Also methods
