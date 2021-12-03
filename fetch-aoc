@@ -11,9 +11,6 @@ use experimental 'lexical_subs';
 
 use Getopt::Long;
 
-#
-# Format of which directory to put the input in
-#
 my $WGET       = "/opt/local/bin/wget";
 my $AOC_HOST   = "adventofcode.com";
 
