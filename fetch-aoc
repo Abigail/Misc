@@ -1,0 +1,104 @@
+#!/opt/perl/bin/perl
+
+use 5.032;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+use experimental 'lexical_subs';
+
+use Getopt::Long;
+
+#
+# Format of which directory to put the input in
+#
+my $WGET       = "/opt/local/bin/wget";
+my $AOC_HOST   = "adventofcode.com";
+
+GetOptions ('year=i'        =>  \my $year,
+            'day=i'         =>  \my $day,
+            'force'         =>  \my $force,
+            'dir=s'         =>  \my $dir,
+            'file=s'        =>  \my $file,
+            'cookie=s'      =>  \my $cookie,
+            'help|?|usage'  =>  \my $help);
+
+if (@ARGV || $help) {
+    usage ();
+    exit;
+}
+
+#
+# Poor man's UTC-5 approximation
+#
+$year   //= 1900 + (gmtime (time - 5 * 3600)) [5];
+$day    //=        (gmtime (time - 5 * 3600)) [3];
+$dir    //= ".";
+$file   //= "input";
+$cookie //= $ENV {AOC_SESSION_COOKIE};
+
+my $url = sprintf "https://%s/%04d/day/%d/input" => $AOC_HOST, $year, $day;
+
+die "$dir: No such directory" unless -d $dir;
+die "No session cookie"       unless $cookie;
+
+my $target = "$dir/$file";
+
+die "$target already exists, use --force to overwrite.\n"
+      if -f $target && !$force;  # Don't refetch, unless forced to.
+
+system $WGET => "-O" => "$target",
+                "--no-cookie",
+                "--header" => "Cookie: session=$cookie",
+                "-q",
+                $url
+        and die "wget failed";
+
+printf "Downloaded %d bytes into %s\n" => -s $target, $target;
+
+exit;
+
+sub usage {print << "--"}
+@{[$0=~s!.*/!!r]} [--cookie cookie] [--day day] [--dir dir] [--file file]
+   [--force] [--help] [--year year]
+
+Fetches input from Advent of Code. Without arguments, it tries to
+make an educated guess what to fetch. The following options are
+recognized:
+
+    --cookie cookie
+        The session cookie you use to authenticate yourself at
+        the Advent of Code website. If not given, the value in
+        the environment variable AOC_SESSION_COOKIE is used.
+        If this is not set, the program dies.
+
+    --day day
+        The day for which to fetch. By default, the current day
+        of the month is used (in EST/UTC-5).
+
+    --dir dir
+        The directory where to put the input file. If not given,
+        the current directory is used. The program dies if the
+        given directory does not exist.
+
+    --file file
+        The name of the file to write the input to. If not given,
+        "input" is used as the file name.
+
+    --force
+        If the file to write the input to already exists, the
+        program exits with a message, unless the --force is given.
+        This prevents refetching input files you have already
+        fetched.
+
+    --help, -?, --usage
+        Print this help message.
+
+    --year year
+        Year to download input from. By default, it uses the
+        current year (in EST/UTC-5).
+--
+
+__END__
