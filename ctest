@@ -18,6 +18,7 @@ use Test::More;
 use DBI;
 use Getopt::Long;
 use Config::Any;
+use Time::HiRes qw [time];
 
 #
 # Read options
@@ -258,6 +259,7 @@ sub do_a_run (%params) {
     my $test_name       =  $params {test_name};
     my $exp_pattern     =  $params {exp_pattern};
     my $run_type        =  $params {run_type} // "";
+    my $sort_words      =  $params {sort_words};
 
     my $command;
     if ($exe) {
@@ -289,7 +291,10 @@ sub do_a_run (%params) {
     }
 
     my $exp_out   = `cat $output_file`;
+    my $start     =  time;
     my $got_out   = `$command`;
+    my $end       =  time;
+    my $runtime   =  $end - $start;
 
     #
     # Perhaps we need to join the output into a single string;
@@ -337,6 +342,36 @@ sub do_a_run (%params) {
                                   sort {$a cmp $b}
                                   split "\n" => $got_out
         }
+    }
+
+    #
+    # Sort the words/numbers on *each line*
+    #
+    if ($sort_words) {
+        if ($sort_words =~ /^n/) {
+            $got_out = join "" => map {"$_\n"}
+                                  map {join " " => @$_}
+                                  map {[sort {$a <=> $b} @$_]}
+                                  map {[split ' ']} split /\n/ => $got_out;
+            $exp_out = join "" => map {"$_\n"}
+                                  map {join " " => @$_}
+                                  map {[sort {$a <=> $b} @$_]}
+                                  map {[split ' ']} split /\n/ => $exp_out;
+        }
+        else {
+            $got_out = join "" => map {"$_\n"}
+                                  map {join " " => @$_}
+                                  map {[sort {$a cmp $b} @$_]}
+                                  map {[split ' ']} split /\n/ => $got_out;
+            $exp_out = join "" => map {"$_\n"}
+                                  map {join " " => @$_}
+                                  map {[sort {$a cmp $b} @$_]}
+                                  map {[split ' ']} split /\n/ => $exp_out;
+        }
+    }
+
+    if ($runtime >= 0.01) {
+        $test_name .= sprintf " (%.2fs)" => $runtime;
     }
 
     if ($exp_out =~ /^qr\s*\{(.*)\}$/ ||
@@ -443,6 +478,8 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                             setting ($config, "remove_pattern", @setting_args);
             my $precision = setting ($config, "precision", @setting_args);
             my $sort_type = setting ($config, "sort", @setting_args);
+            my $sort_words  =
+                            setting ($config, "sort_words", @setting_args);
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
@@ -489,6 +526,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 remove_pat     => $remove_pat,
                 precision      => $precision,
                 sort_type      => $sort_type,
+                sort_words     => $sort_words,
                 compiled       => $compiled,
                 no_input       => $no_input,
                 exp_pattern    => $exp_pattern,
