@@ -1,3 +1,5 @@
+#!/usr/bin/bc
+
 #
 # See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 #
@@ -5,3 +7,10 @@
 #
 # Run as: bc ch-1.bc < input-file
 #
+
+while (1) {
+    n = read ()
+    if (n == 0) {
+        break
+    }
+}
