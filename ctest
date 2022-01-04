@@ -1095,6 +1095,7 @@ sub calc_todo (%args) {
 # and language)
 #
 sub check_reference (%args) {
+    my $URL      = "https://theweeklychallenge.org/blog/perl-weekly-challenge";
     my $config   = $args {config};
     my $source   = $args {source};
     my $type     = $args {type};
@@ -1112,6 +1113,10 @@ sub check_reference (%args) {
             @matches = grep {$_ ne $comp && $_ ne $out} @matches;
         }
         ok !grep ({$_ ne $name} @matches), "No other reference";
+
+        ok `pwd` =~ m {/challenge-([0-9]+)/} &&
+                    grep ({m {See \s* $URL-$1}x} @text), "Weekly challenge URL";
+
     }
 }
 
