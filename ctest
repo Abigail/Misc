@@ -578,6 +578,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     if ($$lang_info {clean_files}) {
         foreach my $file (split /\s+/ => $$lang_info {clean_files}) {
             $file =~ s/%(?:RUN_)BASE\b/$RUN_BASE/;
+            $file =~ s/%SOURCE_NAME\b/$SOURCE_NAME/;
             push @unlink => $file;
         }
     }
@@ -875,6 +876,7 @@ sub load_language_config ($config) {
             exe         =>   "/usr/local/bin/mmix",
             exe_args    =>   "-q %SOURCE_NAME.out",
             no_ref      =>    1,
+            clean_files =>   "%SOURCE_NAME.out",
         },
         MUMPS           =>   {
             ext         =>   "mps",
