@@ -1,0 +1,34 @@
+#!/opt/perl/bin/perl
+
+use 5.032;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+use experimental 'lexical_subs';
+
+my $DIR  = $ENV {HOME} .
+           "/GitHub/Programming_Challenges/perlweeklychallenge-club";
+my $ACK  = "/opt/perl/bin/ack";
+my $USER = $ENV {USER};
+
+my ($language, $pattern);
+
+die "$0 [language] $pattern" unless 1 <= @ARGV && @ARGV <= 2;
+
+if (@ARGV == 2) {
+    $language = shift;
+}
+elsif (@ARGV == 1) {
+    use POSIX qw [getcwd];
+    my $dir = getcwd;
+    $language = $dir =~ s!.*/!!r;
+}
+
+$pattern = shift;
+
+exec "$ACK -i '$pattern' $DIR/challenge-*/$USER/$language/ch-*.*";
+
+__END__
