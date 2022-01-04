@@ -1,3 +1,5 @@
+#!/usr/local/opt/tcl-tk/bin/tclsh
+
 #
 # See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 #
