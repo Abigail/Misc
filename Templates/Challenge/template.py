@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/local/bin/python3
 
 #
 # See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
