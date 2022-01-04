@@ -1,7 +1,7 @@
 #!/bin/csh
 
 #
-# See ../README.md
+# See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 #
 
 #

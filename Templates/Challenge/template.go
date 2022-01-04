@@ -1,11 +1,11 @@
 package main
 
 //
-// See ../README.md
+// See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 //
 
 //
-// Run as: go run ch-1.go
+// Run as: go run ch-1.go < input-file
 //
 
 import (

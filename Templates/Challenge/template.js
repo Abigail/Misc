@@ -1,7 +1,7 @@
 #!/usr/local/bin/node
 
 //
-// See ../README.md
+// See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 //
 
 //
@@ -10,9 +10,6 @@
 
   require ('readline')
 . createInterface ({input: process . stdin})   
-. on              ('line', line => main (line))
+. on              ('line', line => {
 
-
-function main (line) {
-    console . log (line);
-}
+})

@@ -1,5 +1,5 @@
 010 REM 
-020 REM See ../README.md
+020 REM See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 030 REM 
 
 040 REM 
