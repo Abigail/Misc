@@ -1,3 +1,5 @@
+#!/usr/local/bin/Rscript
+
 #
 # See https://theweeklychallenge.org/blog/perl-weekly-challenge-000
 #
