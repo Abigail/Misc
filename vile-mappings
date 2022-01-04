@@ -13,7 +13,9 @@ store-procedure read-template "Read a template"
     ~endif
 
     setv %ch_fullfile &cat %ch_template %ext
+    setv %pc "0"
     ~if &and &match "/Programming_Challenges/" $cfilname &readable %ch_fullfile
+        setv %pc "1"
         setv %fullfile %ch_fullfile
     ~else
         setv %fullfile &cat %template %ext
@@ -24,6 +26,9 @@ store-procedure read-template "Read a template"
         read-file %fullfile
         goto-end-of-file
         position-window b
+        ~if &sequal %pc "1"
+            search-forward "000"
+        ~endif
     ~endif
 ~endm
 
