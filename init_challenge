@@ -90,6 +90,11 @@ foreach my $language (sort @ARGV) {
         $template =~ s/\b(ch-?)1/${1}$challenge/g;
     }
 
+    $template =~ s/challenge-000/challenge-$week/;
+
+    chomp ($template);
+           $template .= "\n";
+
     open my $fh, ">", $file or die "open $file: $!";
     print   $fh $template;
     close   $fh or die "close $file: $!";
