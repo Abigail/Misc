@@ -16,3 +16,12 @@ short digitsum (size_t n, short * numbers) {
     }
     return (out);
 }
+
+# define BASE 10
+short digit_sum1 (long n) {
+    short out = 0;
+    while (n) {
+        out += n % BASE;
+        n   /= BASE;
+    }
+}
