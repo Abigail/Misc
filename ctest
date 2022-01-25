@@ -336,12 +336,18 @@ sub do_a_run (%params) {
         if ($sort_type =~ /^n/) {
             $got_out = join "" => map  {"$_\n"}
                                   sort {$a <=> $b}
-                                  split "\n" => $got_out
+                                  split "\n" => $got_out;
+            $exp_out = join "" => map  {"$_\n"}
+                                  sort {$a <=> $b}
+                                  split "\n" => $exp_out
         }
         else {
             $got_out = join "" => map  {"$_\n"}
                                   sort {$a cmp $b}
-                                  split "\n" => $got_out
+                                  split "\n" => $got_out;
+            $exp_out = join "" => map  {"$_\n"}
+                                  sort {$a cmp $b}
+                                  split "\n" => $exp_out
         }
     }
 
