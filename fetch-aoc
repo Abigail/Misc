@@ -11,6 +11,9 @@ use Getopt::Long;
 my $WGET       = "/opt/local/bin/wget";
 my $AOC_HOST   = "adventofcode.com";
 
+my $EMAIL      = 'aoc@abigail.freedom.nl';
+my $USER_AGENT = "github.com/Abigail/Misc/blob/master/fetch-aoc by $EMAIL";
+
 GetOptions ('year=i'        =>  \my $year,
             'day=i'         =>  \my $day,
             'force'         =>  \my $force,
@@ -31,7 +34,32 @@ $year   //= 1900 + (gmtime (time - 5 * 3600)) [5];
 $day    //=        (gmtime (time - 5 * 3600)) [3];
 $dir    //= ".";
 $file   //= "input";
-$cookie //= $ENV {AOC_SESSION_COOKIE};
+$cookie //= do {
+    my $dir  = $ENV {HOME} . "/Library/Application Support/Firefox/Profiles/";
+    opendir my $dh, $dir or die "opendir $dir failed: $!";
+    my ($defdir) = grep {/\.default$/} readdir $dh;
+    die "Cannot find Firefox's default dir\n" unless $defdir;
+    my $cookies     = "$dir/$defdir/cookies.sqlite";
+    my $tmp_cookies = "/tmp/cookies.sqlite";
+    #
+    # Must copy otherwise the database may be locked
+    #
+    system "cp '$cookies' '$tmp_cookies'" and die "copy cookies failed\n";
+
+    my $cmd = <<~ "--" =~ s/\n/ /gr =~ s/^ +//r;
+        SELECT  value
+          FROM  moz_cookies
+         WHERE  name = "session"
+           AND  host = ".adventofcode.com";
+    --
+
+    chomp (my $cookie = `echo '$cmd' | sqlite3 '$tmp_cookies'`);
+    die "Failed to find cookie\n" unless $cookie;
+
+    unlink $tmp_cookies or die "Failed to unlink $tmp_cookies";
+
+    $cookie;
+};
 
 my $url = sprintf "https://%s/%04d/day/%d/input" => $AOC_HOST, $year, $day;
 
@@ -43,10 +71,11 @@ my $target = "$dir/$file";
 die "$target already exists, use --force to overwrite.\n"
       if -f $target && !$force;  # Don't refetch, unless forced to.
 
-system $WGET => "-O" => "$target",
+system $WGET => "-O"           => "$target",
                 "--no-cookie",
-                "--header" => "Cookie: session=$cookie",
+                "--header"     => "Cookie: session=$cookie",
                 "-q",
+                "--user-agent" =>  $USER_AGENT,
                 $url
         and die "wget failed";
 
