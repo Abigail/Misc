@@ -1,0 +1,30 @@
+f         = 1
+g         = 1
+fib [0]   = 0
+fib [1]   = 1
+fib_count = 2
+
+define is_fib (n) {
+    auto t, min, max
+    while (g < n) {
+        t = g
+        g = f + g
+        f = t
+        fib [fib_count] = g
+        fib_count = fib_count + 1
+    }
+    min = 0
+    max = fib_count
+    while (min < max) {
+        mid = (min + max) / 2
+        if (fib [mid] == n) {
+            return (1)
+        }
+        if (fib [mid] < n) {
+            min = mid + 1
+        } else {
+            max = mid
+        }
+    }
+    return (0)
+}

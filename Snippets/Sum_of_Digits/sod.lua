@@ -12,3 +12,13 @@ function digit_sum (numbers)
     end
     return (sum)
 end
+
+
+function digit_sum1 (number) 
+    local sum = 0
+    while number > 0 do
+        sum = sum + number % 10
+        number = math . floor (number / 10)
+    end
+    return (sum)
+end

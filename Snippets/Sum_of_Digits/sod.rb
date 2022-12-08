@@ -13,3 +13,13 @@ def digit_sum (numbers)
     end
     return sum
 end
+
+def digit_sum1 (number)
+    sum  =  0
+    base = 10
+    while number > 0 do
+        sum    += number % base
+        number /= base
+    end
+    return sum
+end

@@ -260,13 +260,14 @@ sub do_a_run (%params) {
     my $exp_pattern     =  $params {exp_pattern};
     my $run_type        =  $params {run_type} // "";
     my $sort_words      =  $params {sort_words};
+    my $env             =  $params {env} // "";
 
-    my $command;
+    my $command = "$env ";
     if ($exe) {
-        $command = "$exe $exe_args $run_type $args"
+        $command .= "$exe $exe_args $run_type $args"
     }
     elsif ($compiled) {
-        $command = "./$compiled $run_type $args"
+        $command .= "./$compiled $run_type $args"
     }
     else {
         die "Do not know what to do!";
@@ -335,12 +336,18 @@ sub do_a_run (%params) {
         if ($sort_type =~ /^n/) {
             $got_out = join "" => map  {"$_\n"}
                                   sort {$a <=> $b}
-                                  split "\n" => $got_out
+                                  split "\n" => $got_out;
+            $exp_out = join "" => map  {"$_\n"}
+                                  sort {$a <=> $b}
+                                  split "\n" => $exp_out
         }
         else {
             $got_out = join "" => map  {"$_\n"}
                                   sort {$a cmp $b}
-                                  split "\n" => $got_out
+                                  split "\n" => $got_out;
+            $exp_out = join "" => map  {"$_\n"}
+                                  sort {$a cmp $b}
+                                  split "\n" => $exp_out
         }
     }
 
@@ -394,8 +401,8 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
     my $compiled = "";
     my @unlink;
 
-    if ($$lang_info {env}) {
-        my $env = $$lang_info {env};
+    if ($$lang_info {hash_env}) {
+        my $env = $$lang_info {hash_env};
         foreach my $key (keys %$env) {
             my $value = $$env {$key};
             $ENV {$key} = $value;
@@ -480,6 +487,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
             my $sort_type = setting ($config, "sort", @setting_args);
             my $sort_words  =
                             setting ($config, "sort_words", @setting_args);
+            my $env       = setting ($config, "env", @setting_args);
 
             my ($input_file, $output_file) = @{$$in_outputs {$input}};
 
@@ -531,6 +539,7 @@ sub test_source ($config, $type, $challenge, $language, $source, $in_outputs) {
                 no_input       => $no_input,
                 exp_pattern    => $exp_pattern,
                 test_name      => $test_name,
+                env            => $env,
             };
             if ($run_types) {
                 subtest $test_name => sub {
@@ -921,7 +930,7 @@ sub load_language_config ($config) {
         },
         R               =>   {
             exe         =>   "/usr/local/bin/Rscript",
-            env         =>   {
+            hash_env    =>   {
                 LANG        =>   "en_US.UTF-8",
                 LC_ALL      =>   "en_US.UTF-8",
             },

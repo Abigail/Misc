@@ -11,3 +11,13 @@ function digit_sum (numbers) {
     })
     return sum
 }
+
+function digit_sum1 (number) {
+    let sum  =  0
+    let base = 10
+    while (number > 0) {
+        sum   += number % base
+        number = Math . floor (number / base)
+    }
+    return sum
+}
