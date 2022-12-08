@@ -16,6 +16,9 @@ store-procedure read-template "Read a template"
     setv %pc "0"
     ~if &and &match "/Programming_Challenges/" $cfilname &readable %ch_fullfile
         setv %pc "1"
+        ~if &sequal %ext ".ini"
+            setv %pc "0"
+        ~endif
         setv %fullfile %ch_fullfile
     ~else
         setv %fullfile &cat %template %ext
